@@ -1,0 +1,5 @@
+{
+  "name": "AI Financial Health Dashboard",
+  "description": "An intelligent dashboard that analyzes personal transaction data to provide insights into financial health, offers AI-powered tips, and predicts future expenses using Gemini.",
+  "requestFramePermissions": []
+}
