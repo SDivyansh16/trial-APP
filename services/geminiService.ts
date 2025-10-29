@@ -1,16 +1,38 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FinancialSummary, Transaction, SpendingAnomaly, CreditAdvice, FinancialHealthReport, FinancialTip, Prediction, ScenarioResult } from "../types";
 
-// Initialize the Google GenAI client.
-// The API key is sourced from an environment variable.
-const apiKey = process.env.API_KEY;
-if (!apiKey) {
-    // This will be visible in the browser console, which is fine for this environment.
-    console.error("The API_KEY environment variable is not set. AI features will not work.");
-    // We can throw an error to make it clear that the app cannot function without the key.
-    throw new Error("The API_KEY environment variable is not set. AI features will be disabled.");
+
+// --- Client Initialization ---
+
+// Singleton instance of the AI client, initialized lazily.
+let ai: GoogleGenAI | null = null;
+
+/**
+ * Checks if the Gemini API key is available in the environment.
+ * This is the secure way to handle API keys, preventing them from being hard-coded.
+ * @returns {boolean} True if the API key is set, false otherwise.
+ */
+export function isGeminiAvailable(): boolean {
+    return !!process.env.API_KEY;
 }
-const ai = new GoogleGenAI({ apiKey });
+
+/**
+ * Lazily initializes and returns the GoogleGenAI client.
+ * Throws an error if the API key is not configured.
+ * @returns {GoogleGenAI} The initialized AI client.
+ */
+function getAiClient(): GoogleGenAI {
+    if (ai) {
+        return ai;
+    }
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+        // This error should not be reached if ApiKeyChecker is used, but serves as a safeguard.
+        throw new Error("Gemini API key is not configured. Please set the API_KEY environment variable.");
+    }
+    ai = new GoogleGenAI({ apiKey });
+    return ai;
+}
 
 
 /**
@@ -27,33 +49,22 @@ function extractJsonFromMarkdown(text: string): any {
     if (match && match[1]) {
         jsonString = match[1];
     } else {
-        // Fallback: find the first '{' or '[' and the last '}' or ']'
         const firstBracket = jsonString.indexOf('{');
         const firstSquare = jsonString.indexOf('[');
         let startIndex = -1;
 
-        if (firstBracket === -1 && firstSquare === -1) {
-            throw new Error("No JSON object or array found in the AI response.");
-        }
-
-        if (firstBracket === -1) {
-            startIndex = firstSquare;
-        } else if (firstSquare === -1) {
-            startIndex = firstBracket;
-        } else {
-            startIndex = Math.min(firstBracket, firstSquare);
-        }
+        if (firstBracket === -1 && firstSquare === -1) throw new Error("No JSON object or array found in the AI response.");
+        if (firstBracket === -1) startIndex = firstSquare;
+        else if (firstSquare === -1) startIndex = firstBracket;
+        else startIndex = Math.min(firstBracket, firstSquare);
         
         const lastBracket = jsonString.lastIndexOf('}');
         const lastSquare = jsonString.lastIndexOf(']');
         let endIndex = -1;
         
-        if (lastBracket === -1 && lastSquare === -1) {
-             throw new Error("No closing bracket for JSON object or array found.");
-        }
+        if (lastBracket === -1 && lastSquare === -1) throw new Error("No closing bracket for JSON object or array found.");
         
         endIndex = Math.max(lastBracket, lastSquare);
-        
         jsonString = jsonString.substring(startIndex, endIndex + 1);
     }
 
@@ -67,7 +78,8 @@ function extractJsonFromMarkdown(text: string): any {
 
 
 export const getFinancialHealthReport = async (transactions: Transaction[], summary: FinancialSummary): Promise<FinancialHealthReport> => {
-    const transactionSnippets = transactions.slice(0, 20).map(t => `${t.date.toISOString().split('T')[0]}: ${t.description} (${t.type}) - $${t.amount.toFixed(2)}`).join('\n');
+    const client = getAiClient();
+    const transactionSnippets = transactions.slice(0, 20).map(t => `${new Date(t.date).toISOString().split('T')[0]}: ${t.description} (${t.type}) - $${t.amount.toFixed(2)}`).join('\n');
 
     const prompt = `
         You are a friendly and insightful personal finance assistant. Analyze the user's financial summary and recent transaction data to generate a comprehensive "Financial Health Report".
@@ -88,10 +100,10 @@ export const getFinancialHealthReport = async (transactions: Transaction[], summ
         1.  **healthScore:** An overall financial health score from 0 to 100. Consider the savings rate (income vs. expenses), debt levels relative to income, and spending habits. A savings rate over 20% is excellent, 10-20% is good, 0-10% is fair, and negative is poor. The score should be an integer.
         2.  **scoreJustification:** A short, encouraging paragraph (2-3 sentences) explaining the score in simple terms.
         3.  **keyObservations:** A list of 2-4 bullet points. Identify both positive habits ('positive' type) and areas for improvement ('negative' type).
-        4.  **recommendations:** A list of 2-3 actionable, personalized recommendations. Each recommendation must have a short 'title' and a 'recommendation' text explaining the step and its benefit.
+        4.  **recommendations:** A list of 2-3 actionable, personalized recommendations. Each recommendation must have a 'title' and a 'recommendation' text explaining the step and its benefit.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-pro',
         contents: prompt,
         config: {
@@ -99,8 +111,8 @@ export const getFinancialHealthReport = async (transactions: Transaction[], summ
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
-                    healthScore: { type: Type.NUMBER, description: "A score from 0 to 100." },
-                    scoreJustification: { type: Type.STRING, description: "A brief explanation of the score." },
+                    healthScore: { type: Type.NUMBER },
+                    scoreJustification: { type: Type.STRING },
                     keyObservations: {
                         type: Type.ARRAY,
                         items: {
@@ -132,12 +144,12 @@ export const getFinancialHealthReport = async (transactions: Transaction[], summ
     return extractJsonFromMarkdown(response.text) as FinancialHealthReport;
 };
 
-
 export const categorizeTransactions = async (
     transactions: { id: string, description: string }[],
     categories: string[]
 ): Promise<Record<string, { category: string, confidence: 'high' | 'medium' | 'low' }>> => {
     if (transactions.length === 0) return {};
+    const client = getAiClient();
     const prompt = `
         Given a list of transactions and available expense categories, categorize each transaction.
         Only use categories from this list: ${JSON.stringify(categories.filter(c => c !== 'Uncategorized'))}.
@@ -146,7 +158,7 @@ export const categorizeTransactions = async (
         Return a single JSON object where keys are transaction IDs. Each value must be an object with 'category' (string) and 'confidence' ('high', 'medium', or 'low').
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -164,34 +176,25 @@ export const categorizeTransactions = async (
 
 export const getSpendingAnomalies = async (transactions: Transaction[]): Promise<SpendingAnomaly[]> => {
     if (transactions.length < 5) return [];
+    const client = getAiClient();
 
     const expenseTransactions = transactions.filter(t => t.type === 'expense');
     const totalSpending = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
     const averageTransactionAmount = totalSpending / expenseTransactions.length;
-    const sortedExpenses = [...expenseTransactions].sort((a, b) => b.amount - a.amount);
-    const largestTransactions = sortedExpenses.slice(0, 3).map(t => ({ description: t.description, amount: t.amount, category: t.category }));
+    const largestTransactions = [...expenseTransactions].sort((a, b) => b.amount - a.amount).slice(0, 3).map(t => ({ description: t.description, amount: t.amount, category: t.category }));
     
-    const summaryForAI = {
-        totalTransactions: expenseTransactions.length,
-        totalSpending: totalSpending,
-        averageTransactionAmount: averageTransactionAmount,
-        largestTransactions: largestTransactions,
-    };
-
     const prompt = `
-        Act as a financial data analyst. Review the following summary of transactions for a specific period and identify up to 3 potential anomalies.
-        An anomaly could be an unusually large purchase compared to the average, a transaction that seems out of place, or a pattern that deviates from the norm.
-        For each anomaly you identify, provide a concise 'description' of the transaction and a 'justification' explaining why it's considered an anomaly based on the summary data provided.
-        If no significant anomalies are found, return an empty array.
-
+        Act as a financial data analyst. Review the following summary of transactions and identify up to 3 potential anomalies.
+        An anomaly could be an unusually large purchase, a transaction that seems out of place, or a pattern that deviates from the norm.
+        For each anomaly, provide a 'description' and a 'justification'. If no anomalies are found, return an empty array.
         Transaction Summary:
-        - Total Expense Transactions: ${summaryForAI.totalTransactions}
-        - Total Spending: $${summaryForAI.totalSpending.toFixed(2)}
-        - Average Transaction Amount: $${summaryForAI.averageTransactionAmount.toFixed(2)}
-        - Top 3 Largest Transactions: ${JSON.stringify(summaryForAI.largestTransactions)}
+        - Total Expense Transactions: ${expenseTransactions.length}
+        - Total Spending: $${totalSpending.toFixed(2)}
+        - Average Transaction Amount: $${averageTransactionAmount.toFixed(2)}
+        - Top 3 Largest Transactions: ${JSON.stringify(largestTransactions)}
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -200,10 +203,7 @@ export const getSpendingAnomalies = async (transactions: Transaction[]): Promise
                 type: Type.ARRAY,
                 items: {
                     type: Type.OBJECT,
-                    properties: {
-                        description: { type: Type.STRING },
-                        justification: { type: Type.STRING }
-                    },
+                    properties: { description: { type: Type.STRING }, justification: { type: Type.STRING } },
                     required: ["description", "justification"]
                 }
             }
@@ -214,6 +214,7 @@ export const getSpendingAnomalies = async (transactions: Transaction[]): Promise
 };
 
 export const getCreditScoreAdvice = async (score: number, summary: FinancialSummary): Promise<CreditAdvice> => {
+    const client = getAiClient();
     const prompt = `
         A user has a credit score of ${score} and this financial summary:
         - Monthly Income: $${summary.totalIncome.toFixed(2)}
@@ -224,7 +225,7 @@ export const getCreditScoreAdvice = async (score: number, summary: FinancialSumm
         2. A list of 3-4 actionable 'tips' to improve or maintain the score, personalized to their income/debt. Each tip should have a 'title' and 'explanation'.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -237,10 +238,7 @@ export const getCreditScoreAdvice = async (score: number, summary: FinancialSumm
                         type: Type.ARRAY,
                         items: {
                             type: Type.OBJECT,
-                            properties: {
-                                title: { type: Type.STRING },
-                                explanation: { type: Type.STRING }
-                            },
+                            properties: { title: { type: Type.STRING }, explanation: { type: Type.STRING } },
                             required: ["title", "explanation"]
                         }
                     }
@@ -249,26 +247,23 @@ export const getCreditScoreAdvice = async (score: number, summary: FinancialSumm
             }
         }
     });
-
     return extractJsonFromMarkdown(response.text) as CreditAdvice;
 };
 
 export const getFinancialTips = async (summary: FinancialSummary): Promise<FinancialTip[]> => {
+    const client = getAiClient();
     const prompt = `
-        You are a helpful financial advisor. Based on the following financial summary, generate 3-4 concise and actionable tips for financial improvement.
+        You are a helpful financial advisor. Based on the following financial summary, generate 3-4 concise and actionable tips.
         Each tip should have a 'title' and a brief 'explanation'.
-        Focus on the user's key metrics. For example, if savings are low, suggest budgeting methods. If expenses in a category are high, suggest ways to reduce them.
-
+        Focus on the user's key metrics. If savings are low, suggest budgeting. If a spending category is high, suggest ways to reduce it.
         User's Financial Summary:
         - Total Income: $${summary.totalIncome.toFixed(2)}
         - Total Expenses: $${summary.totalExpenses.toFixed(2)}
         - Net Savings: $${summary.netSavings.toFixed(2)}
         - Top Spending Categories: ${summary.expensesByCategory.slice(0, 3).map(c => `${c.name}: $${c.value.toFixed(2)}`).join(', ')}
-
-        Return ONLY a JSON array of objects, where each object has "title" and "explanation" keys.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -277,10 +272,7 @@ export const getFinancialTips = async (summary: FinancialSummary): Promise<Finan
                 type: Type.ARRAY,
                 items: {
                     type: Type.OBJECT,
-                    properties: {
-                        title: { type: Type.STRING },
-                        explanation: { type: Type.STRING }
-                    },
+                    properties: { title: { type: Type.STRING }, explanation: { type: Type.STRING } },
                     required: ["title", "explanation"]
                 }
             }
@@ -291,28 +283,19 @@ export const getFinancialTips = async (summary: FinancialSummary): Promise<Finan
 };
 
 export const predictNextMonthExpenses = async (transactions: Transaction[], monthsToPredict: number): Promise<Prediction[]> => {
-    const recentExpenses = transactions
-        .filter(t => t.type === 'expense')
-        .slice(-100) // Use last 100 expenses for context
-        .map(t => ({ date: t.date.toISOString().split('T')[0], amount: t.amount, category: t.category }));
+    const client = getAiClient();
+    const recentExpenses = transactions.filter(t => t.type === 'expense').slice(-100).map(t => ({ date: new Date(t.date).toISOString().split('T')[0], amount: t.amount, category: t.category }));
 
     const prompt = `
         You are a financial forecasting AI. Based on the user's recent transaction history, predict their total expenses and top 3-5 spending categories for the next ${monthsToPredict} month(s).
-        Analyze patterns, seasonality (if any), and recurring costs from the data provided.
-
-        Recent Expense Data (last 100 transactions):
-        ${JSON.stringify(recentExpenses)}
-
+        Analyze patterns and recurring costs.
+        Recent Expense Data (last 100 transactions): ${JSON.stringify(recentExpenses)}
         Current Date: ${new Date().toISOString().split('T')[0]}
-
-        Provide your prediction as a JSON array. Each object in the array should represent a future month and have the following structure:
-        - "month": The month name and year (e.g., "October 2024").
-        - "totalPredictedExpenses": The total estimated expense amount for that month (as a number).
-        - "categoryPredictions": An array of objects for the top 3-5 predicted spending categories, each with "category" (string) and "predictedAmount" (number).
+        Provide your prediction as a JSON array. Each object should represent a future month with "month", "totalPredictedExpenses", and "categoryPredictions".
     `;
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro', // Use pro for better reasoning
+    const response = await client.models.generateContent({
+        model: 'gemini-2.5-pro',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -327,10 +310,7 @@ export const predictNextMonthExpenses = async (transactions: Transaction[], mont
                             type: Type.ARRAY,
                             items: {
                                 type: Type.OBJECT,
-                                properties: {
-                                    category: { type: Type.STRING },
-                                    predictedAmount: { type: Type.NUMBER }
-                                },
+                                properties: { category: { type: Type.STRING }, predictedAmount: { type: Type.NUMBER } },
                                 required: ["category", "predictedAmount"]
                             }
                         }
@@ -340,35 +320,26 @@ export const predictNextMonthExpenses = async (transactions: Transaction[], mont
             }
         }
     });
-
     return extractJsonFromMarkdown(response.text) as Prediction[];
 };
 
 export const simulateScenario = async (summary: FinancialSummary, incomeChange: number, expenseChanges: { category: string, amount: number }[]): Promise<ScenarioResult> => {
+    const client = getAiClient();
     const prompt = `
-        You are a financial scenario simulator. A user wants to understand the impact of potential changes to their finances.
-        
-        Their Current Monthly Financial Summary:
-        - Total Income: $${summary.totalIncome.toFixed(2)}
-        - Total Expenses: $${summary.totalExpenses.toFixed(2)}
-        - Net Savings: $${summary.netSavings.toFixed(2)}
-
+        You are a financial scenario simulator. A user wants to understand the impact of potential changes.
+        Current Monthly Summary:
+        - Income: $${summary.totalIncome.toFixed(2)}
+        - Expenses: $${summary.totalExpenses.toFixed(2)}
         Proposed Changes:
-        - Monthly Income Change: $${incomeChange.toFixed(2)}
-        - Monthly Expense Changes: ${expenseChanges.length > 0 ? expenseChanges.map(c => `${c.category}: $${c.amount.toFixed(2)}`).join(', ') : 'None'}
-
-        Calculate the new estimated monthly savings. Then, provide a brief 'impactAnalysis' (2-3 sentences) explaining how these changes affect their financial situation (e.g., savings rate, ability to reach goals). Finally, provide a concise 'recommendations' paragraph (2-3 sentences) suggesting what they should do or consider based on this new scenario.
-
-        Return the result as a single JSON object with the keys "newMonthlySavings", "impactAnalysis", and "recommendations".
+        - Income Change: $${incomeChange.toFixed(2)}
+        - Expense Changes: ${expenseChanges.length > 0 ? expenseChanges.map(c => `${c.category}: $${c.amount.toFixed(2)}`).join(', ') : 'None'}
+        Calculate the new estimated monthly savings. Provide a brief 'impactAnalysis' and 'recommendations'.
+        Return a single JSON object with "newMonthlySavings", "impactAnalysis", and "recommendations".
     `;
+    
+    const newMonthlySavings = (summary.totalIncome + incomeChange) - (summary.totalExpenses + expenseChanges.reduce((sum, change) => sum + change.amount, 0));
 
-    // Manual calculation for accuracy
-    const newIncome = summary.totalIncome + incomeChange;
-    const expenseChangeTotal = expenseChanges.reduce((sum, change) => sum + change.amount, 0);
-    const newExpenses = summary.totalExpenses + expenseChangeTotal;
-    const newMonthlySavings = newIncome - newExpenses;
-
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
@@ -376,7 +347,7 @@ export const simulateScenario = async (summary: FinancialSummary, incomeChange: 
             responseSchema: {
                 type: Type.OBJECT,
                 properties: {
-                    newMonthlySavings: { type: Type.NUMBER }, // The model will generate this, but we'll override it with our precise calculation.
+                    newMonthlySavings: { type: Type.NUMBER },
                     impactAnalysis: { type: Type.STRING },
                     recommendations: { type: Type.STRING }
                 },
@@ -384,10 +355,7 @@ export const simulateScenario = async (summary: FinancialSummary, incomeChange: 
             }
         }
     });
-
     const result = extractJsonFromMarkdown(response.text) as ScenarioResult;
-    // Override the model's calculation with our own for precision.
-    result.newMonthlySavings = newMonthlySavings;
-
+    result.newMonthlySavings = newMonthlySavings; // Override with precise calculation
     return result;
 };
