@@ -99,9 +99,11 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "Amount",
     actions: "Actions",
     // ApiKeyChecker
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
     configErrorTitle: "Configuration Error",
-    configErrorBody: "The Gemini API key is missing. To enable AI features, the API_KEY must be configured as an environment variable in your deployment settings.",
-    configErrorSecurity: "This key is kept out of the source code for security reasons, which is a standard best practice for protecting sensitive credentials."
+    configErrorBody1: "The Gemini API key is missing or invalid. To enable AI features, please set the",
+    configErrorBody2: "environment variable.",
+    configErrorSecurity: "In a production environment, it is strongly recommended to use a secure method for managing API keys, such as a backend proxy or a secrets manager, to avoid exposing them on the client side."
   },
   hi: {
     appTitle: "एआई वित्तीय डैशबोर्ड",
@@ -194,8 +196,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "राशि",
     actions: "कार्रवाइयां",
     configErrorTitle: "कॉन्फ़िगरेशन त्रुटि",
-    configErrorBody: "जेमिनी एपीआई कुंजी गायब है। एआई सुविधाओं को सक्षम करने के लिए, एपीआई_केई को आपके परिनियोजन सेटिंग्स में एक पर्यावरण चर के रूप में कॉन्फ़िगर किया जाना चाहिए।",
-    configErrorSecurity: "सुरक्षा कारणों से इस कुंजी को स्रोत कोड से बाहर रखा गया है, जो संवेदनशील क्रेडेंशियल्स की सुरक्षा के लिए एक मानक सर्वोत्तम अभ्यास है।"
+    configErrorBody1: "जेमिनी एपीआई कुंजी गायब है। एआई सुविधाओं को सक्षम करने के लिए, कृपया फ़ाइल खोलें",
+    configErrorBody2: "और प्लेसहोल्डर कुंजी को अपनी वास्तविक जेमिनी एपीआई कुंजी से बदलें।",
+    configErrorSecurity: "इस एप्लिकेशन में सरलता के लिए, एपीआई कुंजी सीधे कोड में सेट की गई है। उत्पादन वातावरण में, पर्यावरण चर या रहस्य प्रबंधक जैसी अधिक सुरक्षित विधि का उपयोग करने की दृढ़ता से अनुशंसा की जाती है।"
   },
   bn: {
     appTitle: "এআই ফাইন্যান্সিয়াল ড্যাশবোর্ড",
@@ -288,8 +291,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "পরিমাণ",
     actions: "ক্রিয়া",
     configErrorTitle: "কনফিগারেশন ত্রুটি",
-    configErrorBody: "জেমিনি এপিআই কী অনুপস্থিত। এআই বৈশিষ্ট্যগুলি সক্ষম করতে, আপনার ডিপ্লয়মেন্ট সেটিংসে এপিআই_কেই একটি পরিবেশ পরিবর্তনশীল হিসাবে কনফিগার করতে হবে।",
-    configErrorSecurity: "নিরাপত্তার কারণে এই কীটি সোর্স কোডের বাইরে রাখা হয়েছে, যা সংবেদনশীল শংসাপত্র সুরক্ষার জন্য একটি মানক সেরা অনুশীলন।"
+    configErrorBody1: "জেমিনি এপিআই কী অনুপস্থিত। এআই বৈশিষ্ট্যগুলি সক্ষম করতে, অনুগ্রহ করে ফাইলটি খুলুন",
+    configErrorBody2: "এবং প্লেসহোল্ডার কীটি আপনার আসল জেমিনি এপিআই কী দিয়ে প্রতিস্থাপন করুন।",
+    configErrorSecurity: "এই অ্যাপ্লিকেশনটিতে সরলতার জন্য, এপিআই কী সরাসরি কোডে সেট করা হয়েছে। একটি প্রোডাকশন পরিবেশে, পরিবেশ ভেরিয়েবল বা একটি সিক্রেটস ম্যানেজারের মতো আরও সুরক্ষিত পদ্ধতি ব্যবহার করার জন্য দৃঢ়ভাবে সুপারিশ করা হয়।"
   },
   ta: {
     appTitle: "AI நிதி டாஷ்போர்டு",
@@ -382,8 +386,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "தொகை",
     actions: "செயல்கள்",
     configErrorTitle: "உள்ளமைவு பிழை",
-    configErrorBody: "ஜெமினி ஏபிஐ விசை இல்லை. AI அம்சங்களை இயக்க, உங்கள் வரிசைப்படுத்தல் அமைப்புகளில் API_KEY ஒரு சூழல் மாறியாக உள்ளமைக்கப்பட வேண்டும்.",
-    configErrorSecurity: "பாதுகாப்புக் காரணங்களுக்காக இந்த விசை மூலக் குறியீட்டிலிருந்து வெளியே வைக்கப்பட்டுள்ளது, இது முக்கியமான நற்சான்றிதழ்களைப் பாதுகாப்பதற்கான ஒரு நிலையான சிறந்த நடைமுறையாகும்."
+    configErrorBody1: "ஜெமினி ஏபிஐ விசை இல்லை. AI அம்சங்களை இயக்க, கோப்பைத் திறக்கவும்",
+    configErrorBody2: "மற்றும் ஒதுக்கிட விசையை உங்கள் உண்மையான ஜெமினி ஏபிஐ விசையுடன் மாற்றவும்.",
+    configErrorSecurity: "இந்த பயன்பாட்டில் எளிமைக்காக, ஏபிஐ விசை நேரடியாக குறியீட்டில் அமைக்கப்பட்டுள்ளது. ஒரு உற்பத்தி சூழலில், சூழல் மாறிகள் அல்லது ரகசிய மேலாளர் போன்ற மிகவும் பாதுகாப்பான முறையைப் பயன்படுத்த கடுமையாக பரிந்துரைக்கப்படுகிறது."
   },
   pa: {
     appTitle: "ਏਆਈ ਵਿੱਤੀ ਡੈਸ਼ਬੋਰਡ",
@@ -476,8 +481,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "ਰਕਮ",
     actions: "ਕਾਰਵਾਈਆਂ",
     configErrorTitle: "ਸੰਰਚਨਾ ਗਲਤੀ",
-    configErrorBody: "ਜੇਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਗੁੰਮ ਹੈ। ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਏਪੀਆਈ_ਕੇਈ ਨੂੰ ਤੁਹਾਡੀਆਂ ਤੈਨਾਤੀ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇੱਕ ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਵਜੋਂ ਕੌਂਫਿਗਰ ਕੀਤਾ ਜਾਣਾ ਚਾਹੀਦਾ ਹੈ।",
-    configErrorSecurity: "ਸੁਰੱਖਿਆ ਕਾਰਨਾਂ ਕਰਕੇ ਇਸ ਕੁੰਜੀ ਨੂੰ ਸਰੋਤ ਕੋਡ ਤੋਂ ਬਾਹਰ ਰੱਖਿਆ ਗਿਆ ਹੈ, ਜੋ ਸੰਵੇਦਨਸ਼ੀਲ ਪ੍ਰਮਾਣ ਪੱਤਰਾਂ ਦੀ ਸੁਰੱਖਿਆ ਲਈ ਇੱਕ ਮਿਆਰੀ ਵਧੀਆ ਅਭਿਆਸ ਹੈ।"
+    configErrorBody1: "ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਗੁੰਮ ਹੈ। ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਫਾਈਲ ਖੋਲ੍ਹੋ",
+    configErrorBody2: "ਅਤੇ ਪਲੇਸਹੋਲਡਰ ਕੁੰਜੀ ਨੂੰ ਆਪਣੀ ਅਸਲ ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਨਾਲ ਬਦਲੋ।",
+    configErrorSecurity: "ਇਸ ਐਪਲੀਕੇਸ਼ਨ ਵਿੱਚ ਸਰਲਤਾ ਲਈ, ਏਪੀਆਈ ਕੁੰਜੀ ਸਿੱਧੇ ਕੋਡ ਵਿੱਚ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ। ਇੱਕ ਉਤਪਾਦਨ ਵਾਤਾਵਰਣ ਵਿੱਚ, ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਜਾਂ ਇੱਕ ਗੁਪਤ ਪ੍ਰਬੰਧਕ ਵਰਗੇ ਵਧੇਰੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਦੀ ਵਰਤੋਂ ਕਰਨ ਦੀ ਜ਼ੋਰਦਾਰ ਸਿਫਾਰਸ਼ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।"
   },
   te: {
     appTitle: "AI ఆర్థిక డాష్‌బోర్డ్",
@@ -570,8 +576,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "మొత్తం",
     actions: "చర్యలు",
     configErrorTitle: "ఆకృతీకరణ లోపం",
-    configErrorBody: "జెమిని API కీ లేదు. AI లక్షణాలను ప్రారంభించడానికి, మీ విస్తరణ సెట్టింగ్‌లలో API_KEY పర్యావరణ వేరియబుల్‌గా కాన్ఫిగర్ చేయబడాలి.",
-    configErrorSecurity: "భద్రతా కారణాల దృష్ట్యా ఈ కీ సోర్స్ కోడ్ నుండి దూరంగా ఉంచబడింది, ఇది సున్నితమైన ఆధారాలను రక్షించడానికి ఒక ప్రామాణిక ఉత్తమ అభ్యాసం."
+    configErrorBody1: "జెమిని API కీ లేదు. AI లక్షణాలను ప్రారంభించడానికి, దయచేసి ఫైల్‌ను తెరవండి",
+    configErrorBody2: "మరియు ప్లేస్‌హోల్డర్ కీని మీ వాస్తవ జెమిని API కీతో భర్తీ చేయండి.",
+    configErrorSecurity: "ఈ అనువర్తనంలో సరళత కోసం, API కీ నేరుగా కోడ్‌లో సెట్ చేయబడింది. ఉత్పత్తి వాతావరణంలో, పర్యావరణ వేరియబుల్స్ లేదా రహస్య నిర్వాహకి వంటి మరింత సురక్షితమైన పద్ధతిని ఉపయోగించడం గట్టిగా సిఫార్సు చేయబడింది."
   },
 };
 

@@ -4,15 +4,16 @@ import { FinancialSummary, Transaction, SpendingAnomaly, CreditAdvice, Financial
 
 // --- Client Initialization ---
 
-// FIX: Added isGeminiAvailable to check for the API key as expected by ApiKeyChecker.tsx.
-// This resolves the module export error.
+// FIX: Removed hardcoded API key and updated functions to use process.env.API_KEY as per guidelines.
 /**
  * Checks if the Gemini API is available by checking for the API key in environment variables.
- * @returns {boolean} True if the API key is present.
+ * @returns {boolean} True if the API key is available and not a placeholder.
  */
 export const isGeminiAvailable = (): boolean => {
-    // This check ensures AI features are disabled if the key is missing.
-    return !!process.env.API_KEY;
+    // This check ensures AI features are disabled via the ApiKeyChecker component if the key is not set.
+    return !!process.env.API_KEY && 
+           process.env.API_KEY !== "YOUR_API_KEY_HERE" && 
+           process.env.API_KEY !== "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 };
 
 
@@ -29,11 +30,10 @@ function getAiClient(): GoogleGenAI {
         return ai;
     }
     
-    // FIX: API key is now sourced from environment variables as per security best practices
-    // and project guidelines. The hardcoded placeholder has been removed.
-    if (!process.env.API_KEY) {
-        // This error is for developers and should be caught by ApiKeyChecker for users.
-        throw new Error("Gemini API key is not configured. Please ensure the API_KEY environment variable is set.");
+    if (!isGeminiAvailable()) {
+        // This provides a clear error for the user if they forget to add the key,
+        // in case ApiKeyChecker is not used.
+        throw new Error("Gemini API key is not configured. Please set the API_KEY environment variable.");
     }
     
     ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
