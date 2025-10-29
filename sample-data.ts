@@ -96,7 +96,7 @@ const allTransactionsFromCSV = newTransactions.concat([
 ] as const);
 
 
-const newCategories = Array.from(new Set(allTransactionsFromCSV.map(t => t.category)));
+let newCategories = Array.from(new Set(allTransactionsFromCSV.map(t => t.category)));
 if (!newCategories.includes('Uncategorized')) newCategories.push('Uncategorized');
 if (!newCategories.includes('Savings Goal')) newCategories.push('Savings Goal');
 if (!newCategories.includes('Income')) newCategories.push('Income');
