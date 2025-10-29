@@ -19,30 +19,51 @@ const ReminderModal: React.FC<{
 }> = ({ reminder, initialDate, onClose, onSave, onDelete }) => {
     const [title, setTitle] = useState(reminder?.title || '');
     const [date, setDate] = useState(reminder?.date || initialDate);
+    const [error, setError] = useState('');
+
+    const validate = () => {
+        if (!title.trim()) {
+            setError("Title cannot be empty.");
+            return false;
+        }
+        if (!date) {
+            setError("Date is required.");
+            return false;
+        }
+        setError('');
+        return true;
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (title.trim() && date) {
+        if (validate()) {
             if (reminder) {
-                onSave({ ...reminder, title, date });
+                onSave({ ...reminder, title: title.trim(), date });
             } else {
-                onSave({ title, date });
+                onSave({ title: title.trim(), date });
             }
         }
     };
+    
+    const isFormValid = () => title.trim() && date;
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20" onClick={onClose}>
             <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-6 text-text-primary">{reminder ? 'Edit Reminder' : 'Add Reminder'}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} required placeholder="Reminder title" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
-                    <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                    <div>
+                        <input type="text" value={title} onChange={e => setTitle(e.target.value)} required placeholder="Reminder title" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                    </div>
+                    <div>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                    </div>
+                    {error && <p className="text-red-400 text-xs">{error}</p>}
                     <div className="flex justify-between items-center pt-4">
                          {reminder && onDelete && <button type="button" onClick={() => onDelete(reminder.id)} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold">Delete</button>}
                         <div className="flex-grow flex justify-end space-x-3">
                             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save</button>
+                            <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save</button>
                         </div>
                     </div>
                 </form>

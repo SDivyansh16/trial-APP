@@ -25,17 +25,35 @@ const GoalModal: React.FC<{
     const [name, setName] = useState(goal?.name || '');
     const [targetAmount, setTargetAmount] = useState(goal?.targetAmount.toString() || '');
     const [deadline, setDeadline] = useState(goal?.deadline || '');
+    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+
+    const validate = () => {
+        const newErrors: Partial<Record<string, string>> = {};
+        if (!name.trim()) newErrors.name = "Goal name cannot be empty.";
+        const numericTarget = parseFloat(targetAmount);
+        if (isNaN(numericTarget) || numericTarget <= 0) {
+            newErrors.targetAmount = "Please enter a valid positive target amount.";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numericTarget = parseFloat(targetAmount);
-        if (name.trim() && !isNaN(numericTarget) && numericTarget > 0) {
+        if (validate()) {
+            const numericTarget = parseFloat(targetAmount);
             if (goal) {
-                onSave({ ...goal, name, targetAmount: numericTarget, deadline });
+                onSave({ ...goal, name: name.trim(), targetAmount: numericTarget, deadline });
             } else {
-                onSave({ name, targetAmount: numericTarget, deadline });
+                onSave({ name: name.trim(), targetAmount: numericTarget, deadline });
             }
         }
+    };
+
+    const isFormValid = () => {
+        const numericTarget = parseFloat(targetAmount);
+        return name.trim() && !isNaN(numericTarget) && numericTarget > 0;
     };
 
     return (
@@ -46,10 +64,12 @@ const GoalModal: React.FC<{
                     <div>
                         <label htmlFor="goalName" className="block mb-2 text-sm font-medium text-text-secondary">Goal Name</label>
                         <input type="text" id="goalName" value={name} onChange={e => setName(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="e.g., Vacation Fund" />
+                        {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
                     </div>
                     <div>
                         <label htmlFor="targetAmount" className="block mb-2 text-sm font-medium text-text-secondary">Target Amount ($)</label>
                         <input type="number" id="targetAmount" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} required min="1" step="0.01" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="e.g., 2000" />
+                        {errors.targetAmount && <p className="text-red-400 text-xs mt-1">{errors.targetAmount}</p>}
                     </div>
                     <div>
                         <label htmlFor="deadline" className="block mb-2 text-sm font-medium text-text-secondary">Deadline (Optional)</label>
@@ -57,7 +77,7 @@ const GoalModal: React.FC<{
                     </div>
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save Goal</button>
+                        <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save Goal</button>
                     </div>
                 </form>
             </div>
@@ -81,12 +101,12 @@ const GoalItem: React.FC<{
     const handleContributeSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const numericAmount = parseFloat(amount);
-        if (!isNaN(numericAmount) && numericAmount > 0) {
-            onContribute(goal.id, numericAmount);
-            setAmount('');
-            setIsContributing(false);
-        }
+        onContribute(goal.id, numericAmount);
+        setAmount('');
+        setIsContributing(false);
     };
+    
+    const isContributeValid = !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
 
     return (
         <div className="bg-white/50 p-4 rounded-lg">
@@ -115,7 +135,7 @@ const GoalItem: React.FC<{
             {isContributing && (
                 <form onSubmit={handleContributeSubmit} className="mt-4 flex items-center space-x-2">
                     <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" min="0.01" step="0.01" required className="flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2" />
-                    <button type="submit" className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-emerald-700 font-semibold">Add</button>
+                    <button type="submit" disabled={!isContributeValid} className="px-3 py-2 text-sm bg-secondary text-white rounded-lg hover:bg-emerald-700 font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Add</button>
                     <button type="button" onClick={() => setIsContributing(false)} className="px-3 py-2 text-sm bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 font-semibold">Cancel</button>
                 </form>
             )}

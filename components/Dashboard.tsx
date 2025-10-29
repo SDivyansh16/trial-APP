@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Transaction, FinancialSummary, Goal, Bill, Debt, Budget, Asset, Liability, Reminder } from '../types';
+import { Transaction, FinancialSummary, Goal, Bill, Debt, Budget, Asset, Liability, Reminder, DrillDownFilter } from '../types';
 import SummaryCards from './SummaryCards';
 import ExpenseChart from './ExpenseChart';
 import MonthlyTrendChart from './MonthlyTrendChart';
 import TransactionTable from './TransactionTable';
 import FinancialInsights from './FinancialInsights';
-import MonthSelector from './MonthSelector';
 import GoalTracker from './GoalTracker';
 import UpcomingBills from './UpcomingBills';
 import DebtTracker from './DebtTracker';
@@ -16,6 +15,7 @@ import AddTransactionModal from './AddTransactionModal';
 import Alerts from './Alerts';
 import SpendingTrends from './SpendingTrends';
 import CreditScoreMonitor from './CreditScoreMonitor';
+import DashboardFilters from './DashboardFilters';
 import { useLanguage } from '../contexts/LanguageContext';
 
 
@@ -33,7 +33,11 @@ interface DashboardProps {
   creditScore: number | null;
   availableMonths: string[];
   selectedMonth: string;
+  selectedCategories: string[];
+  selectedType: 'all' | 'income' | 'expense';
   onMonthChange: (month: string) => void;
+  onCategoryChange: (categories: string[]) => void;
+  onTypeChange: (type: 'all' | 'income' | 'expense') => void;
   onAddTransaction: (transactionData: Omit<Transaction, 'id'>) => void;
   onUpdateTransaction: (transaction: Transaction) => void;
   onDeleteTransaction: (transactionId: string) => void;
@@ -65,7 +69,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = (props) => {
   const { 
     transactions, allTransactions, categories, goals, bills, debts, budgets, assets, liabilities, reminders, creditScore,
-    availableMonths, selectedMonth, onMonthChange, onAddTransaction, onUpdateTransaction, onDeleteTransaction,
+    availableMonths, selectedMonth, selectedCategories, selectedType, onMonthChange, onCategoryChange, onTypeChange,
+    onAddTransaction, onUpdateTransaction, onDeleteTransaction,
     onAddGoal, onUpdateGoal, onDeleteGoal, onAddContribution, onAddBill, onUpdateBill, onDeleteBill,
     onAddDebt, onUpdateDebt, onDeleteDebt, onAddBudget, onUpdateBudget, onDeleteBudget,
     onAddAsset, onUpdateAsset, onDeleteAsset, onAddLiability, onUpdateLiability, onDeleteLiability,
@@ -73,6 +78,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
   } = props;
   
   const [isAddTransactionModalOpen, setIsAddTransactionModalOpen] = useState(false);
+  const [drillDownFilter, setDrillDownFilter] = useState<DrillDownFilter | null>(null);
   const { t } = useLanguage();
 
   const summary: FinancialSummary = useMemo(() => {
@@ -122,8 +128,23 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
 
     return summaryData;
   }, [transactions, debts, assets, liabilities]);
+  
+  const transactionsForTable = useMemo(() => {
+    if (!drillDownFilter) {
+      return transactions;
+    }
+    return transactions.filter(t => {
+      if (drillDownFilter.type === 'category') {
+        return t.category === drillDownFilter.value;
+      }
+      if (drillDownFilter.type === 'transactionType') {
+        return t.type === drillDownFilter.value;
+      }
+      return true;
+    });
+  }, [transactions, drillDownFilter]);
 
-  const cardClasses = "bg-surface backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-border-color";
+  const baseCardClasses = "bg-white/60 backdrop-blur-xl p-6 rounded-2xl shadow-lg border border-white/20";
 
   return (
     <div className="space-y-8">
@@ -139,37 +160,47 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       )}
       
       <Alerts bills={bills} reminders={reminders} />
+      
+      <DashboardFilters 
+        availableMonths={availableMonths} 
+        selectedMonth={selectedMonth} 
+        onMonthChange={onMonthChange}
+        allCategories={categories}
+        selectedCategories={selectedCategories}
+        onCategoryChange={onCategoryChange}
+        selectedType={selectedType}
+        onTypeChange={onTypeChange}
+      />
 
-      <MonthSelector availableMonths={availableMonths} selectedMonth={selectedMonth} onMonthChange={onMonthChange} />
-      <SummaryCards summary={summary} />
+      <SummaryCards summary={summary} onDrillDown={setDrillDownFilter} />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={`lg:col-span-2 ${cardClasses}`}>
+        <div className={`${baseCardClasses} lg:col-span-2`}>
           <h3 className="text-xl font-semibold mb-4 text-text-primary">{t('monthlyTrends')}</h3>
           <MonthlyTrendChart data={summary.monthlyData} />
         </div>
-        <div className={cardClasses}>
+        <div className={`${baseCardClasses}`}>
           <h3 className="text-xl font-semibold mb-4 text-text-primary">{t('expenseBreakdown')}</h3>
-          <ExpenseChart data={summary.expensesByCategory} />
+          <ExpenseChart data={summary.expensesByCategory} onDrillDown={setDrillDownFilter} />
         </div>
       </div>
       
-      <div className={cardClasses}>
+      <div className={`${baseCardClasses}`}>
         <SpendingTrends transactions={transactions} allTransactions={allTransactions} selectedMonth={selectedMonth} />
       </div>
 
-       <div className={cardClasses}>
+       <div className={`${baseCardClasses}`}>
         <BudgetTracker transactions={transactions} categories={categories} budgets={budgets} onAddBudget={onAddBudget} onUpdateBudget={onUpdateBudget} onDeleteBudget={onDeleteBudget} selectedMonth={selectedMonth} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={`${cardClasses} flex flex-col`}>
+        <div className={`${baseCardClasses} flex flex-col`}>
             <NetWorthTracker assets={assets} liabilities={liabilities} onAddAsset={onAddAsset} onUpdateAsset={onUpdateAsset} onDeleteAsset={onDeleteAsset} onAddLiability={onAddLiability} onUpdateLiability={onUpdateLiability} onDeleteLiability={onDeleteLiability} />
         </div>
-         <div className={`${cardClasses} flex flex-col`}>
+         <div className={`${baseCardClasses} flex flex-col`}>
             <CreditScoreMonitor creditScore={creditScore} summary={summary} onUpdateCreditScore={onUpdateCreditScore} />
         </div>
-        <div className={`${cardClasses} flex flex-col`}>
+        <div className={`${baseCardClasses} flex flex-col`}>
             <FinancialCalendar bills={bills} debts={debts} reminders={reminders} onAddReminder={onAddReminder} onUpdateReminder={onUpdateReminder} onDeleteReminder={onDeleteReminder} />
         </div>
       </div>
@@ -177,22 +208,22 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       <FinancialInsights summary={summary} transactions={allTransactions} categories={categories} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={`${cardClasses} flex flex-col`}>
+        <div className={`${baseCardClasses} flex flex-col`}>
           <h3 className="text-xl font-semibold mb-4 text-text-primary">{t('financialGoals')}</h3>
           <GoalTracker goals={goals} onAddGoal={onAddGoal} onUpdateGoal={onUpdateGoal} onDeleteGoal={onDeleteGoal} onAddContribution={onAddContribution} />
         </div>
-        <div className={`${cardClasses} flex flex-col`}>
+        <div className={`${baseCardClasses} flex flex-col`}>
           <h3 className="text-xl font-semibold mb-4 text-text-primary">{t('debtsAndIOUs')}</h3>
           <DebtTracker debts={debts} onAddDebt={onAddDebt} onUpdateDebt={onUpdateDebt} onDeleteDebt={onDeleteDebt} />
         </div>
-        <div className={`${cardClasses} flex flex-col`}>
+        <div className={`${baseCardClasses} flex flex-col`}>
           <h3 className="text-xl font-semibold mb-4 text-text-primary">{t('upcomingBills')}</h3>
           <UpcomingBills bills={bills} onAddBill={onAddBill} onUpdateBill={onUpdateBill} onDeleteBill={onDeleteBill} />
         </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={`lg:col-span-3 ${cardClasses}`}>
+        <div className={`${baseCardClasses} lg:col-span-3`}>
            <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold text-text-primary">{t('allTransactions')}</h3>
               <button 
@@ -202,7 +233,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
                   {t('addTransaction')}
               </button>
           </div>
-          <TransactionTable transactions={transactions} categories={categories} onUpdateTransaction={onUpdateTransaction} onDeleteTransaction={onDeleteTransaction} />
+          <TransactionTable 
+            transactions={transactionsForTable} 
+            categories={categories} 
+            drillDownFilter={drillDownFilter}
+            onClearDrillDown={() => setDrillDownFilter(null)}
+            onUpdateTransaction={onUpdateTransaction} 
+            onDeleteTransaction={onDeleteTransaction} 
+          />
         </div>
       </div>
 

@@ -18,11 +18,11 @@ const LanguageSelector: React.FC = () => {
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
-        className="bg-background border border-border-color text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 shadow-sm appearance-none pr-8"
+        className="bg-white/50 border border-border-color text-text-primary text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5 shadow-sm appearance-none pr-10 hover:border-primary/50 transition-colors"
         aria-label="Select language"
       >
         {languages.map(lang => (
-          <option key={lang.code} value={lang.code}>{lang.name}</option>
+          <option key={lang.code} value={lang.code} className="bg-background text-text-primary">{lang.name}</option>
         ))}
       </select>
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">

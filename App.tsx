@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Transaction, StoredData, Goal, Bill, Debt, Budget, Asset, Liability, Reminder } from './types';
+import { Transaction, StoredData, Goal, Bill, Debt, Budget, Asset, Liability, Reminder, MalformedRow } from './types';
 import FileUpload from './components/FileUpload';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
@@ -8,6 +8,8 @@ import { categorizeTransactions } from './services/geminiService';
 import CategorizationReviewModal from './components/CategorizationReviewModal';
 import { useLanguage } from './contexts/LanguageContext';
 import LanguageSelector from './components/LanguageSelector';
+import DataReviewModal from './components/DataReviewModal';
+import { sampleData } from './sample-data';
 
 
 const DEFAULT_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Utilities', 'Entertainment', 'Health', 'Uncategorized'];
@@ -26,8 +28,14 @@ const App: React.FC = () => {
   const [creditScore, setCreditScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Filtering state
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<'all' | 'income' | 'expense'>('all');
+
   const [stagedTransactions, setStagedTransactions] = useState<{categorized: Transaction[], toReview: Transaction[]} | null>(null);
+  const [dataReviewState, setDataReviewState] = useState<{ malformedRows: MalformedRow[]; validTransactions: Transaction[] } | null>(null);
   const { t, language, setLanguage } = useLanguage();
 
 
@@ -54,16 +62,21 @@ const App: React.FC = () => {
     return Array.from(monthSet).sort().reverse();
   }, [transactions]);
 
-  // Filter transactions based on the selected month
+  // Filter transactions based on all active filters
   const filteredTransactions = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return transactions;
-    }
     return transactions.filter(t => {
-      const transactionMonth = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}`;
-      return transactionMonth === selectedMonth;
+      // Month filter
+      const monthMatch = selectedMonth === 'all' || `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}` === selectedMonth;
+      
+      // Category filter
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(t.category);
+
+      // Type filter
+      const typeMatch = selectedType === 'all' || t.type === selectedType;
+
+      return monthMatch && categoryMatch && typeMatch;
     });
-  }, [transactions, selectedMonth]);
+  }, [transactions, selectedMonth, selectedCategories, selectedType]);
 
   const updateCategoriesFromTransactions = (transactions: Transaction[]) => {
     const newCategories = new Set(categories);
@@ -74,47 +87,77 @@ const App: React.FC = () => {
     });
     setCategories(Array.from(newCategories).sort());
   };
+  
+  const processTransactionsForCategorization = async (transactionsToProcess: Transaction[]) => {
+    const uncategorized = transactionsToProcess.filter(t => t.category === 'Uncategorized' && t.type === 'expense');
+    const preCategorized = transactionsToProcess.filter(t => t.category !== 'Uncategorized' || t.type !== 'expense');
+
+    if (uncategorized.length > 0) {
+        const transactionsToCategorize = uncategorized.map(t => ({ id: t.id, description: t.description }));
+        try {
+            const suggestions = await categorizeTransactions(transactionsToCategorize, categories);
+            const toReview = uncategorized.map(t => {
+                const suggestion = suggestions[t.id];
+                if (suggestion && categories.includes(suggestion.category)) {
+                    return { ...t, category: suggestion.category, confidence: suggestion.confidence };
+                }
+                return t;
+            });
+            setStagedTransactions({ categorized: preCategorized, toReview: toReview });
+            setIsLoading(false);
+        } catch (e) {
+            console.warn("AI categorization failed, proceeding as 'Uncategorized'.", e);
+            setTransactions(transactionsToProcess);
+            updateCategoriesFromTransactions(transactionsToProcess);
+            setIsLoading(false);
+        }
+    } else {
+      setTransactions(transactionsToProcess);
+      updateCategoriesFromTransactions(transactionsToProcess);
+      setSelectedMonth('all');
+      setIsLoading(false);
+    }
+  };
+
 
   const handleFileUpload = async (file: File) => {
     setIsLoading(true);
     setError(null);
     setStagedTransactions(null);
+    setDataReviewState(null);
     try {
-      let parsedTransactions = await parseCSV(file);
-
-      const uncategorized = parsedTransactions.filter(t => t.category === 'Uncategorized' && t.type === 'expense');
-      const preCategorized = parsedTransactions.filter(t => t.category !== 'Uncategorized' || t.type !== 'expense');
-
-      if (uncategorized.length > 0) {
-          const transactionsToCategorize = uncategorized.map(t => ({ id: t.id, description: t.description }));
-          try {
-              const suggestions = await categorizeTransactions(transactionsToCategorize, categories);
-              const toReview = uncategorized.map(t => {
-                  const suggestion = suggestions[t.id];
-                  if (suggestion && categories.includes(suggestion.category)) {
-                      return { ...t, category: suggestion.category, confidence: suggestion.confidence };
-                  }
-                  return t;
-              });
-              setStagedTransactions({ categorized: preCategorized, toReview: toReview });
-              setIsLoading(false);
-          } catch (e) {
-              console.warn("AI categorization failed, proceeding as 'Uncategorized'.", e);
-              setTransactions(parsedTransactions);
-              updateCategoriesFromTransactions(parsedTransactions);
-              setIsLoading(false);
-          }
-      } else {
-        setTransactions(parsedTransactions);
-        updateCategoriesFromTransactions(parsedTransactions);
-        setSelectedMonth('all');
+      const { validTransactions, malformedRows } = await parseCSV(file);
+      
+      if (malformedRows.length > 0) {
+        setDataReviewState({ malformedRows, validTransactions });
         setIsLoading(false);
+      } else if (validTransactions.length > 0) {
+        await processTransactionsForCategorization(validTransactions);
+      } else {
+        throw new Error("No valid transactions were found in the file.");
       }
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred during parsing.');
       setTransactions([]);
       setIsLoading(false);
     }
+  };
+  
+  const handleDataReviewConfirm = async () => {
+    if (dataReviewState && dataReviewState.validTransactions.length > 0) {
+        setIsLoading(true);
+        setDataReviewState(null);
+        await processTransactionsForCategorization(dataReviewState.validTransactions);
+    } else {
+        setDataReviewState(null);
+        setError("No valid data to import.");
+    }
+  };
+
+  const handleDataReviewCancel = () => {
+    setDataReviewState(null);
+    setError("Upload cancelled due to data quality issues. Please fix your CSV and try again.");
   };
 
   const handleReviewConfirm = (reviewedTransactions: Transaction[]) => {
@@ -181,6 +224,29 @@ const App: React.FC = () => {
     setError(null);
     setSelectedMonth('all');
     localStorage.removeItem(`financial_dashboard_${user}`);
+  };
+
+  const handleLoadSampleData = (user: string) => {
+    setUsername(user);
+
+    // Deep copy and parse dates for transactions
+    const parsedTransactions = sampleData.transactions.map(t => ({ ...t, date: new Date(t.date) }));
+    
+    // Set all state from sample data
+    setTransactions(parsedTransactions);
+    setCategories(sampleData.categories);
+    setGoals(sampleData.goals);
+    setBills(sampleData.bills);
+    setDebts(sampleData.debts);
+    setBudgets(sampleData.budgets);
+    setAssets(sampleData.assets);
+    setLiabilities(sampleData.liabilities);
+    setReminders(sampleData.reminders);
+    setCreditScore(sampleData.creditScore);
+    setError(null);
+    setSelectedMonth('all');
+    setSelectedCategories([]);
+    setSelectedType('all');
   };
 
   const handleSwitchUser = () => {
@@ -278,6 +344,17 @@ const App: React.FC = () => {
   // --- Credit Score Handler ---
   const handleUpdateCreditScore = (score: number) => setCreditScore(score);
 
+  if (dataReviewState) {
+    return (
+        <DataReviewModal
+            malformedRows={dataReviewState.malformedRows}
+            validRowCount={dataReviewState.validTransactions.length}
+            onConfirm={handleDataReviewConfirm}
+            onCancel={handleDataReviewCancel}
+        />
+    );
+  }
+
   if (stagedTransactions) {
     return (
         <CategorizationReviewModal 
@@ -286,43 +363,48 @@ const App: React.FC = () => {
             onConfirm={handleReviewConfirm}
             onCancel={handleReviewCancel}
         />
-    );
+    )
   }
 
   if (!username) {
-    return <Login onLogin={handleLogin} onNewUpload={handleNewUploadSession} />;
+    return <Login onLogin={handleLogin} onNewUpload={handleNewUploadSession} onLoadSampleData={handleLoadSampleData} />;
+  }
+
+  if (transactions.length === 0 && !isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <FileUpload onFileUpload={handleFileUpload} isLoading={isLoading} error={error} />
+        <button onClick={handleSwitchUser} className="mt-8 text-sm font-semibold text-text-secondary hover:text-primary transition-colors">
+          {t('switchUser')}
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen font-sans">
-      <header className="bg-surface/80 backdrop-blur-md sticky top-0 z-10 border-b border-border-color">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-10H9v2h2v2h2v-2h2V9h-2V7h-2v2z"/>
-            </svg>
-            <div>
-                 <h1 className="text-2xl font-bold text-text-primary">{t('appTitle')}</h1>
-                 <p className="text-sm text-text-secondary">{t('welcomeUser', username)}</p>
-            </div>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-30 bg-surface/70 backdrop-blur-xl border-b border-border-color">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+              <h1 className="text-xl font-bold text-text-primary">{t('appTitle')}</h1>
+              <div className="flex items-center space-x-4">
+                  <span className="text-sm text-text-secondary hidden md:block">{t('welcomeUser', username)}</span>
+                  <div className="w-32">
+                    <LanguageSelector />
+                  </div>
+                  <button onClick={handleSwitchUser} className="px-4 py-2 text-sm font-semibold text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                      {t('switchUser')}
+                  </button>
+              </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <LanguageSelector />
-            <button
-                onClick={handleSwitchUser}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors duration-300 font-semibold"
-              >
-                {t('switchUser')}
-              </button>
-          </div>
-        </div>
       </header>
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-        {transactions.length === 0 ? (
-          <FileUpload onFileUpload={handleFileUpload} isLoading={isLoading} error={error} />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+          </div>
         ) : (
-          <Dashboard 
-            transactions={filteredTransactions} 
+          <Dashboard
+            transactions={filteredTransactions}
             allTransactions={transactions}
             categories={categories}
             goals={goals}
@@ -335,7 +417,11 @@ const App: React.FC = () => {
             creditScore={creditScore}
             availableMonths={availableMonths}
             selectedMonth={selectedMonth}
+            selectedCategories={selectedCategories}
+            selectedType={selectedType}
             onMonthChange={setSelectedMonth}
+            onCategoryChange={setSelectedCategories}
+            onTypeChange={setSelectedType}
             onAddTransaction={handleAddTransaction}
             onUpdateTransaction={handleUpdateTransaction}
             onDeleteTransaction={handleDeleteTransaction}

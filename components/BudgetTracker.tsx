@@ -28,6 +28,7 @@ const BudgetModal: React.FC<{
 }> = ({ budget, existingBudgets, allCategories, onClose, onSave }) => {
     const [category, setCategory] = useState(budget?.category || '');
     const [amount, setAmount] = useState(budget?.amount.toString() || '');
+    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
     const availableCategories = useMemo(() => {
         const budgetedCategories = new Set(existingBudgets.map(b => b.category));
@@ -35,12 +36,27 @@ const BudgetModal: React.FC<{
         return allCategories.filter(c => !specialCategories.has(c) && (!budgetedCategories.has(c) || c === budget?.category));
     }, [allCategories, existingBudgets, budget]);
 
+    const validate = () => {
+        const newErrors: Partial<Record<string, string>> = {};
+        if (!category) newErrors.category = "Please select a category.";
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            newErrors.amount = "Please enter a valid positive budget amount.";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numericAmount = parseFloat(amount);
-        if (category && !isNaN(numericAmount) && numericAmount > 0) {
-            onSave({ category, amount: numericAmount });
+        if (validate()) {
+            onSave({ category, amount: parseFloat(amount) });
         }
+    };
+    
+    const isFormValid = () => {
+        const numericAmount = parseFloat(amount);
+        return category && !isNaN(numericAmount) && numericAmount > 0;
     };
 
     return (
@@ -55,14 +71,16 @@ const BudgetModal: React.FC<{
                             {availableCategories.map(c => <option key={c} value={c}>{c}</option>)}
                              {budget && !availableCategories.includes(budget.category) && <option value={budget.category}>{budget.category}</option>}
                         </select>
+                        {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
                     </div>
                     <div>
                         <label htmlFor="amount" className="block mb-2 text-sm font-medium text-text-secondary">Budget Amount ($)</label>
                         <input type="number" id="amount" value={amount} onChange={e => setAmount(e.target.value)} required min="1" step="0.01" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="e.g., 500" />
+                        {errors.amount && <p className="text-red-400 text-xs mt-1">{errors.amount}</p>}
                     </div>
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save Budget</button>
+                        <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save Budget</button>
                     </div>
                 </form>
             </div>

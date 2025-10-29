@@ -23,17 +23,28 @@ const ItemModal: React.FC<{
 }> = ({ item, itemType, onClose, onSave }) => {
     const [name, setName] = useState(item?.name || '');
     const [value, setValue] = useState(item?.value.toString() || '');
-    // Fix: Add explicit type for the state to satisfy TypeScript's strictness.
     const [type, setType] = useState<Asset['type'] | Liability['type']>(item?.type || (itemType === 'Asset' ? 'Cash' : 'Loan'));
+    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
 
     const assetTypes = ['Cash', 'Investment', 'Property', 'Other'];
     const liabilityTypes = ['Loan', 'Credit Card', 'Mortgage', 'Other'];
 
+    const validate = () => {
+        const newErrors: Partial<Record<string, string>> = {};
+        if (!name.trim()) newErrors.name = "Name cannot be empty.";
+        const numericValue = parseFloat(value);
+        if (isNaN(numericValue) || numericValue < 0) {
+            newErrors.value = "Please enter a valid non-negative value.";
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numericValue = parseFloat(value);
-        if (name.trim() && !isNaN(numericValue) && numericValue >= 0) {
-            const baseData = { name, value: numericValue, type };
+        if (validate()) {
+            const numericValue = parseFloat(value);
+            const baseData = { name: name.trim(), value: numericValue, type };
             if (item) {
                 onSave({ ...item, ...baseData });
             } else {
@@ -42,20 +53,30 @@ const ItemModal: React.FC<{
         }
     };
 
+    const isFormValid = () => {
+        const numericValue = parseFloat(value);
+        return name.trim() && !isNaN(numericValue) && numericValue >= 0;
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20" onClick={onClose}>
             <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-6 text-text-primary">{item ? 'Edit' : 'Add'} {itemType}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Name (e.g., Savings Account)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
-                    <input type="number" value={value} onChange={e => setValue(e.target.value)} required min="0" step="0.01" placeholder="Value ($)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
-                    {/* Fix: Cast the string value from e.target.value to the expected union type to fix the TypeScript error. */}
+                    <div>
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Name (e.g., Savings Account)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                        <input type="number" value={value} onChange={e => setValue(e.target.value)} required min="0" step="0.01" placeholder="Value ($)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.value && <p className="text-red-400 text-xs mt-1">{errors.value}</p>}
+                    </div>
                     <select value={type} onChange={e => setType(e.target.value as Asset['type'] | Liability['type'])} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5">
                         {(itemType === 'Asset' ? assetTypes : liabilityTypes).map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save</button>
+                        <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save</button>
                     </div>
                 </form>
             </div>

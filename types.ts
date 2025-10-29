@@ -102,6 +102,17 @@ export interface Reminder {
   date: string; // ISO string
 }
 
+export interface MalformedRow {
+  row: (string|undefined)[];
+  reason: string;
+}
+
+export interface DrillDownFilter {
+  type: 'category' | 'transactionType';
+  value: string;
+}
+
+
 export interface StoredData {
   transactions: Transaction[];
   categories: string[];

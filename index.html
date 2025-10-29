@@ -10,16 +10,16 @@
         theme: {
           extend: {
             colors: {
-              'primary': '#6366f1',
-              'primary-focus': '#4f46e5',
-              'secondary': '#10b981',
-              'secondary-focus': '#059669',
-              'accent': '#ec4899',
-              'background': '#111827',
-              'surface': 'rgba(31, 41, 55, 0.6)',
-              'text-primary': '#f9fafb',
-              'text-secondary': '#9ca3af',
-              'border-color': 'rgba(55, 65, 81, 0.8)',
+              'primary': '#38bdf8', // Sky Blue
+              'primary-focus': '#0ea5e9',
+              'secondary': '#f472b6', // Rose Pink
+              'secondary-focus': '#ec4899',
+              'accent': '#fbbf24', // Amber
+              'background': '#ffffff', // Changed to white for cards
+              'surface': '#ffffff',
+              'text-primary': '#1f2937', // Dark Gray for text
+              'text-secondary': '#4b5563', // Medium Gray for text
+              'border-color': 'rgba(0, 0, 0, 0.08)',
             },
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
@@ -31,6 +31,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      /* Firefox */
+      html {
+        scrollbar-width: thin;
+        scrollbar-color: #a3a3a3 #e0f2fe; /* thumb track */
+      }
+
+      /* WebKit (Chrome, Safari, Edge) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #e0f2fe;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #d4d4d4;
+        border-radius: 10px;
+        border: 2px solid #e0f2fe;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #38bdf8;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
@@ -43,8 +67,22 @@
 }
 </script>
 </head>
-  <body class="bg-background text-text-primary">
-    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-900/40 via-background to-background -z-10"></div>
+  <body class="bg-gradient-to-br from-sky-100 to-rose-100 text-text-primary font-sans">
+    <!-- Cheerful Background Design Elements -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+      <div class="absolute top-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/20 blur-3xl opacity-50"></div>
+      <div class="absolute bottom-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-secondary/20 blur-3xl opacity-50"></div>
+      <div class="absolute bottom-[10%] left-[20%] h-[300px] w-[300px] rounded-full bg-accent/10 blur-3xl opacity-60"></div>
+      <svg class="absolute bottom-0 left-0 mb-8" viewBox="0 0 375 283" fill="none" style="transform: scale(0.5); transform-origin: bottom left; opacity: 0.1;">
+        <rect y="175.451" width="152" height="152" rx="8" transform="rotate(-45 0 175.451)" fill="white"></rect>
+        <rect y="175.451" width="152" height="152" rx="8" transform="rotate(-45 0 175.451)" fill="url(#paint0_linear_81_2)"></rect>
+      </svg>
+      <svg class="absolute top-0 right-0 mr-8 mt-8" viewBox="0 0 375 283" fill="none" style="transform: scale(0.3) rotate(180deg); transform-origin: top right; opacity: 0.1;">
+        <rect y="175.451" width="152" height="152" rx="8" transform="rotate(-45 0 175.451)" fill="white"></rect>
+        <rect y="175.451" width="152" height="152" rx="8" transform="rotate(-45 0 175.451)" fill="url(#paint0_linear_81_2)"></rect>
+      </svg>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

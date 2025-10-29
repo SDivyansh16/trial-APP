@@ -14,23 +14,53 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ categories, o
     const [amount, setAmount] = useState('');
     const [type, setType] = useState<'income' | 'expense'>('expense');
     const [newCategory, setNewCategory] = useState('');
+    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+
 
     const expenseCategories = categories.filter(c => c !== 'Uncategorized' && c !== 'Savings Goal' && c !== 'Income');
 
+    const validate = () => {
+        const newErrors: Partial<Record<string, string>> = {};
+        if (!description.trim()) newErrors.description = "Description cannot be empty.";
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            newErrors.amount = "Please enter a valid positive amount.";
+        }
+        if (type === 'expense') {
+            if (!category) newErrors.category = "Please select a category.";
+            if (category === 'new' && !newCategory.trim()) {
+                newErrors.newCategory = "New category name cannot be empty.";
+            }
+        }
+        if (!date) newErrors.date = "Please select a date.";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numericAmount = parseFloat(amount);
-        const finalCategory = type === 'income' ? 'Income' : (category === 'new' ? newCategory.trim() : category);
-
-        if (description.trim() && finalCategory && !isNaN(numericAmount) && numericAmount > 0) {
+        if (validate()) {
+            const numericAmount = parseFloat(amount);
+            const finalCategory = type === 'income' ? 'Income' : (category === 'new' ? newCategory.trim() : category);
             onSave({
                 date: new Date(date),
-                description,
+                description: description.trim(),
                 category: finalCategory,
                 amount: numericAmount,
                 type,
             });
         }
+    };
+
+    const isFormValid = () => {
+        const numericAmount = parseFloat(amount);
+        if (!description.trim() || !date || isNaN(numericAmount) || numericAmount <= 0) return false;
+        if (type === 'expense') {
+            if (!category) return false;
+            if (category === 'new' && !newCategory.trim()) return false;
+        }
+        return true;
     };
 
     return (
@@ -42,11 +72,13 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ categories, o
                     <div>
                         <label htmlFor="date" className="block mb-2 text-sm font-medium text-text-secondary">Date</label>
                         <input type="date" id="date" value={date} onChange={e => setDate(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
                     </div>
 
                     <div>
                         <label htmlFor="description" className="block mb-2 text-sm font-medium text-text-secondary">Description</label>
                         <input type="text" id="description" value={description} onChange={e => setDescription(e.target.value)} required placeholder="e.g., Coffee with friend" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description}</p>}
                     </div>
                     
                     <div>
@@ -72,11 +104,13 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ categories, o
                                     {expenseCategories.map(c => <option key={c} value={c}>{c}</option>)}
                                     <option value="new">-- Add New Category --</option>
                                 </select>
+                                {errors.category && <p className="text-red-400 text-xs mt-1">{errors.category}</p>}
                             </div>
                             {category === 'new' && (
                                 <div>
                                     <label htmlFor="newCategory" className="block mb-2 text-sm font-medium text-text-secondary">New Category Name</label>
                                     <input type="text" id="newCategory" value={newCategory} onChange={e => setNewCategory(e.target.value)} required placeholder="e.g., Subscriptions" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                                    {errors.newCategory && <p className="text-red-400 text-xs mt-1">{errors.newCategory}</p>}
                                 </div>
                             )}
                         </>
@@ -85,11 +119,12 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ categories, o
                     <div>
                         <label htmlFor="amount" className="block mb-2 text-sm font-medium text-text-secondary">Amount ($)</label>
                         <input type="number" id="amount" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" step="0.01" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" placeholder="e.g., 5.75" />
+                        {errors.amount && <p className="text-red-400 text-xs mt-1">{errors.amount}</p>}
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save Transaction</button>
+                        <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save Transaction</button>
                     </div>
                 </form>
             </div>

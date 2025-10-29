@@ -16,13 +16,30 @@ const BillModal: React.FC<{
     const [name, setName] = useState(bill?.name || '');
     const [amount, setAmount] = useState(bill?.amount.toString() || '');
     const [dueDate, setDueDate] = useState(bill?.dueDate || new Date().toISOString().split('T')[0]);
+    const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+
+    const validate = () => {
+        const newErrors: Partial<Record<string, string>> = {};
+        if (!name.trim()) newErrors.name = "Bill name cannot be empty.";
+        const numericAmount = parseFloat(amount);
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            newErrors.amount = "Please enter a valid positive amount.";
+        }
+        if (!dueDate) newErrors.dueDate = "Please select a due date.";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const numericAmount = parseFloat(amount);
-        if (name.trim() && !isNaN(numericAmount) && numericAmount > 0 && dueDate) {
-            onSave({ name, amount: numericAmount, dueDate });
+        if (validate()) {
+            onSave({ name: name.trim(), amount: parseFloat(amount), dueDate });
         }
+    };
+    
+    const isFormValid = () => {
+        const numericAmount = parseFloat(amount);
+        return name.trim() && !isNaN(numericAmount) && numericAmount > 0 && dueDate;
     };
 
     return (
@@ -30,12 +47,21 @@ const BillModal: React.FC<{
             <div className="bg-card p-6 rounded-xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
                 <h3 className="text-xl font-bold mb-6 text-text-primary">Add New Bill</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Bill Name (e.g., Netflix)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
-                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" step="0.01" placeholder="Amount ($)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
-                    <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                    <div>
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Bill Name (e.g., Netflix)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                    </div>
+                    <div>
+                        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} required min="0.01" step="0.01" placeholder="Amount ($)" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.amount && <p className="text-red-400 text-xs mt-1">{errors.amount}</p>}
+                    </div>
+                    <div>
+                        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" />
+                        {errors.dueDate && <p className="text-red-400 text-xs mt-1">{errors.dueDate}</p>}
+                    </div>
                     <div className="flex justify-end space-x-3 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save Bill</button>
+                        <button type="submit" disabled={!isFormValid()} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed">Save Bill</button>
                     </div>
                 </form>
             </div>
@@ -72,18 +98,18 @@ const UpcomingBills: React.FC<UpcomingBillsProps> = ({ bills, onAddBill, onUpdat
 
             <div className="flex-grow space-y-4 max-h-[350px] overflow-y-auto pr-2">
                 {unpaidBills.length > 0 ? unpaidBills.map(bill => (
-                    <div key={bill.id} className={`p-3 rounded-lg flex items-center justify-between ${bill.isOverdue ? 'bg-red-100' : 'bg-white/50'}`}>
+                    <div key={bill.id} className={`p-3 rounded-lg flex items-center justify-between ${bill.isOverdue ? 'bg-rose-100 border-l-4 border-rose-400' : 'bg-sky-50 border-l-4 border-sky-300'}`}>
                         <div>
                             <p className="font-semibold text-text-primary">{bill.name}</p>
-                            <p className={`text-sm ${bill.isOverdue ? 'text-red-600' : 'text-text-secondary'}`}>
+                            <p className={`text-sm ${bill.isOverdue ? 'text-rose-700' : 'text-text-secondary'}`}>
                                 Due: {new Date(bill.dueDate).toLocaleDateString()}
                             </p>
                         </div>
                         <div className="text-right">
                             <p className="font-bold text-lg text-text-primary">${bill.amount.toFixed(2)}</p>
                             <div className="flex items-center space-x-2">
-                                <button onClick={() => handleMarkAsPaid(bill)} className="text-xs font-semibold text-green-600 hover:text-green-800">Paid</button>
-                                <button onClick={() => onDeleteBill(bill.id)} className="text-xs font-semibold text-red-600 hover:text-red-800">Del</button>
+                                <button onClick={() => handleMarkAsPaid(bill)} className="text-xs font-semibold text-emerald-600 hover:text-emerald-800">Paid</button>
+                                <button onClick={() => onDeleteBill(bill.id)} className="text-xs font-semibold text-rose-600 hover:text-rose-800">Del</button>
                             </div>
                         </div>
                     </div>
@@ -94,7 +120,7 @@ const UpcomingBills: React.FC<UpcomingBillsProps> = ({ bills, onAddBill, onUpdat
                         <summary className="cursor-pointer text-sm font-semibold text-text-secondary">View Recently Paid</summary>
                         <div className="mt-2 space-y-2">
                             {paidBills.slice(0, 5).map(bill => (
-                                <div key={bill.id} className="p-3 rounded-lg bg-gray-100/80 flex items-center justify-between opacity-70">
+                                <div key={bill.id} className="p-3 rounded-lg bg-gray-100 flex items-center justify-between opacity-70">
                                     <div>
                                         <p className="font-medium text-text-secondary line-through">{bill.name}</p>
                                         <p className="text-xs text-gray-500">Paid on {new Date(bill.dueDate).toLocaleDateString()}</p>

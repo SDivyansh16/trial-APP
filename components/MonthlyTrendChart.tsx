@@ -23,29 +23,31 @@ const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({ data }) => {
       >
         <defs>
           <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.1}/>
           </linearGradient>
           <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#f472b6" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#f472b6" stopOpacity={0.1}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(107, 114, 128, 0.3)" />
-        <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#9ca3af' }} />
-        <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0, 0, 0, 0.05)" />
+        <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} />
+        <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tick={{ fontSize: 12, fill: '#6b7280' }} />
         <Tooltip
           formatter={(value: number) => `$${value.toFixed(2)}`}
           contentStyle={{
-            backgroundColor: 'rgba(31, 41, 55, 0.8)',
-            border: '1px solid #4b5563',
-            borderRadius: '0.5rem',
-            color: '#f9fafb'
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '0.75rem',
+            color: '#1f2937',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
           }}
         />
-        <Legend wrapperStyle={{color: '#f9fafb'}} />
-        <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} activeDot={{ r: 8 }} name="Income" fill="url(#colorIncome)" />
-        <Area type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} activeDot={{ r: 8 }} name="Expenses" fill="url(#colorExpenses)" />
+        <Legend wrapperStyle={{color: '#4b5563', fontSize: '12px'}} />
+        <Area type="monotone" dataKey="income" stroke="#38bdf8" strokeWidth={2} activeDot={{ r: 8 }} name="Income" fill="url(#colorIncome)" />
+        <Area type="monotone" dataKey="expenses" stroke="#f472b6" strokeWidth={2} activeDot={{ r: 8 }} name="Expenses" fill="url(#colorExpenses)" />
       </AreaChart>
     </ResponsiveContainer>
   );

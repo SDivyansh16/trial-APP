@@ -1,6 +1,6 @@
-import { Transaction } from '../types';
+import { Transaction, MalformedRow } from '../types';
 
-export const parseCSV = (file: File): Promise<Transaction[]> => {
+export const parseCSV = (file: File): Promise<{ validTransactions: Transaction[]; malformedRows: MalformedRow[] }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -15,7 +15,8 @@ export const parseCSV = (file: File): Promise<Transaction[]> => {
         return reject(new Error('CSV file is empty or contains only a header.'));
       }
 
-      const header = rows.shift()!.toLowerCase().split(',').map(h => h.trim());
+      const headerRow = rows.shift()!;
+      const header = headerRow.toLowerCase().split(',').map(h => h.trim());
       
       const dateIndex = header.indexOf('date');
       let descriptionIndex = header.indexOf('description');
@@ -37,41 +38,54 @@ export const parseCSV = (file: File): Promise<Transaction[]> => {
         return reject(new Error(`CSV must contain headers: ${requiredHeaders}. Missing: ${missing.join(', ')}.`));
       }
 
-      const transactions: Transaction[] = rows.map((row, index) => {
-        const values = row.split(',');
-        const amount = parseFloat(values[amountIndex]);
-        if (isNaN(amount)) {
-            console.warn(`Skipping row ${index + 2} due to invalid amount.`);
-            return null;
+      const validTransactions: Transaction[] = [];
+      const malformedRows: MalformedRow[] = [];
+
+      rows.forEach((rowStr, index) => {
+        const values = rowStr.split(',');
+        const originalRow = [...values];
+        
+        const dateStr = values[dateIndex];
+        const date = new Date(dateStr);
+        if (!dateStr || isNaN(date.getTime())) {
+            malformedRows.push({ row: originalRow, reason: "Invalid or Missing Date"});
+            return;
         }
 
-        const date = new Date(values[dateIndex]);
-        if (isNaN(date.getTime())) {
-             console.warn(`Skipping row ${index + 2} due to invalid date.`);
-            return null;
+        const amountStr = values[amountIndex];
+        const amount = parseFloat(amountStr);
+        if (!amountStr || isNaN(amount)) {
+            malformedRows.push({ row: originalRow, reason: "Invalid or Missing Amount"});
+            return;
         }
-        
+
         const type = values[typeIndex]?.trim().toLowerCase();
         if (type !== 'income' && type !== 'expense') {
-            console.warn(`Skipping row ${index + 2} due to invalid type: '${values[typeIndex]}'. Must be 'income' or 'expense'.`);
-            return null;
+            malformedRows.push({ row: originalRow, reason: "Invalid or Missing Type (must be 'income' or 'expense')"});
+            return;
+        }
+        
+        const description = values[descriptionIndex]?.trim();
+        if (!description) {
+           malformedRows.push({ row: originalRow, reason: "Missing Description"});
+           return;
         }
 
-        return {
+        validTransactions.push({
           id: `${Date.now()}-${index}`,
           date: date,
-          description: values[descriptionIndex]?.trim() || 'N/A',
+          description: description,
           category: values[categoryIndex]?.trim() || 'Uncategorized',
           amount: Math.abs(amount),
           type: type as 'income' | 'expense',
-        };
-      }).filter((t): t is Transaction => t !== null);
+        });
+      });
 
-      if (transactions.length === 0) {
-        return reject(new Error('No valid transactions found in the file. Please check the data format.'));
+      if (validTransactions.length === 0 && malformedRows.length > 0) {
+        return reject(new Error('No valid transactions found. All rows had errors. Please check the file.'));
       }
 
-      resolve(transactions);
+      resolve({ validTransactions, malformedRows });
     };
 
     reader.onerror = () => {

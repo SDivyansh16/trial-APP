@@ -83,10 +83,10 @@ const CreditScoreMonitor: React.FC<CreditScoreMonitorProps> = ({ creditScore, su
                         placeholder="e.g., 720"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
                     />
-                    {error && <p className="text-red-500 text-xs">{error}</p>}
+                    {error && <p className="text-red-400 text-xs mt-1 text-center">{error}</p>}
                     <div className="flex justify-center space-x-3">
                         <button type="button" onClick={() => {setIsEditing(false); setError(null);}} className="px-4 py-2 bg-gray-200 text-text-secondary rounded-lg hover:bg-gray-300 transition-colors font-semibold">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors font-semibold">Save</button>
+                        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-focus transition-colors font-semibold">Save</button>
                     </div>
                  </form>
             </div>
@@ -137,7 +137,7 @@ const CreditScoreMonitor: React.FC<CreditScoreMonitorProps> = ({ creditScore, su
                 ) : (
                     <button onClick={handleGetAdvice} className="w-full bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors">Get AI Improvement Tips</button>
                 )}
-                 {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+                 {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
             </div>
         </div>
     );
