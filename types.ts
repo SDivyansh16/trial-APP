@@ -19,13 +19,27 @@ export interface FinancialSummary {
   monthlyData: { month: string; income: number; expenses: number }[];
 }
 
+export interface FinancialHealthReport {
+  healthScore: number; // A score from 0 to 100
+  scoreJustification: string;
+  keyObservations: {
+    type: 'positive' | 'negative';
+    observation: string;
+  }[];
+  recommendations: {
+    title: string;
+    recommendation: string;
+  }[];
+}
+
+// FIX: Add missing type definitions for AI-powered insights.
 export interface Prediction {
-    month: string;
-    totalPredictedExpenses: number;
-    categoryPredictions: {
-        category: string;
-        predictedAmount: number;
-    }[];
+  month: string;
+  totalPredictedExpenses: number;
+  categoryPredictions: {
+    category: string;
+    predictedAmount: number;
+  }[];
 }
 
 export interface FinancialTip {

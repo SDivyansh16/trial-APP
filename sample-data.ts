@@ -93,7 +93,7 @@ const allTransactionsFromCSV = newTransactions.concat([
     { date: new Date('2025-08-31T00:04:00.133Z'), description: 'Weight standard admit under actually.', category: 'Education', type: 'income', amount: 1303.59 },
     { date: new Date('2025-08-31T10:12:20.411Z'), description: 'Everything senior cultural across head.', category: 'Maintenance', type: 'expense', amount: 1390.99 },
     { date: new Date('2025-09-01T06:29:00.967Z'), description: 'Wife nature pull no.', category: 'Entertainment', type: 'income', amount: 2656.02 }
-]);
+] as const);
 
 
 const newCategories = Array.from(new Set(allTransactionsFromCSV.map(t => t.category)));

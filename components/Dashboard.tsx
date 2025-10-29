@@ -4,7 +4,7 @@ import SummaryCards from './SummaryCards';
 import ExpenseChart from './ExpenseChart';
 import MonthlyTrendChart from './MonthlyTrendChart';
 import TransactionTable from './TransactionTable';
-import FinancialInsights from './FinancialInsights';
+import FinancialHealthReport from './FinancialHealthReport';
 import GoalTracker from './GoalTracker';
 import UpcomingBills from './UpcomingBills';
 import DebtTracker from './DebtTracker';
@@ -205,7 +205,7 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
         </div>
       </div>
 
-      <FinancialInsights summary={summary} transactions={allTransactions} categories={categories} />
+      <FinancialHealthReport summary={summary} transactions={allTransactions} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className={`${baseCardClasses} flex flex-col`}>
