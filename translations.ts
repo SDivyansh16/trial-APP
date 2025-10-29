@@ -99,11 +99,10 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "Amount",
     actions: "Actions",
     // ApiKeyChecker
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
     configErrorTitle: "Configuration Error",
-    configErrorBody1: "The Gemini API key is missing or invalid. To enable AI features, please set the",
-    configErrorBody2: "environment variable.",
-    configErrorSecurity: "In a production environment, it is strongly recommended to use a secure method for managing API keys, such as a backend proxy or a secrets manager, to avoid exposing them on the client side."
+    configErrorBody1: "AI features are unavailable. To enable them, you need to add your Google Gemini API key.",
+    configErrorBody2: "Open the file `services/geminiService.ts` and paste your key into the `GEMINI_API_KEY` constant.",
+    configErrorSecurity: "For security, avoid committing this file with the key to a public repository."
   },
   hi: {
     appTitle: "एआई वित्तीय डैशबोर्ड",
@@ -196,10 +195,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "राशि",
     actions: "कार्रवाइयां",
     configErrorTitle: "कॉन्फ़िगरेशन त्रुटि",
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
-    configErrorBody1: "जेमिनी एपीआई कुंजी गायब है। एआई सुविधाओं को सक्षम करने के लिए, कृपया",
-    configErrorBody2: "पर्यावरण चर सेट करें।",
-    configErrorSecurity: "इस एप्लिकेशन में सरलता के लिए, एपीआई कुंजी सीधे कोड में सेट की गई है। उत्पादन वातावरण में, पर्यावरण चर या रहस्य प्रबंधक जैसी अधिक सुरक्षित विधि का उपयोग करने की दृढ़ता से अनुशंसा की जाती है।"
+    configErrorBody1: "एआई सुविधाएं अनुपलब्ध हैं। उन्हें सक्षम करने के लिए, आपको अपनी गूगल जेमिनी एपीआई कुंजी जोड़नी होगी।",
+    configErrorBody2: "`services/geminiService.ts` फ़ाइल खोलें और अपनी कुंजी `GEMINI_API_KEY` स्थिरांक में पेस्ट करें।",
+    configErrorSecurity: "सुरक्षा के लिए, इस फ़ाइल को कुंजी के साथ सार्वजनिक रिपॉजिटरी में प्रतिबद्ध करने से बचें।"
   },
   bn: {
     appTitle: "এআই ফাইন্যান্সিয়াল ড্যাশবোর্ড",
@@ -292,10 +290,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "পরিমাণ",
     actions: "ক্রিয়া",
     configErrorTitle: "কনফিগারেশন ত্রুটি",
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
-    configErrorBody1: "জেমিনি এপিআই কী অনুপস্থিত। এআই বৈশিষ্ট্যগুলি সক্ষম করতে, অনুগ্রহ করে",
-    configErrorBody2: "এনভায়রনমেন্ট ভেরিয়েবল সেট করুন।",
-    configErrorSecurity: "এই অ্যাপ্লিকেশনটিতে সরলতার জন্য, এপিআই কী সরাসরি কোডে সেট করা হয়েছে। একটি প্রোডাকশন পরিবেশে, পরিবেশ ভেরিয়েবল বা একটি সিক্রেটস ম্যানেজারের মতো আরও সুরক্ষিত পদ্ধতি ব্যবহার করার জন্য দৃঢ়ভাবে সুপারিশ করা হয়।"
+    configErrorBody1: "এআই বৈশিষ্ট্যগুলি अनुपलब्ध রয়েছে। সেগুলি সক্ষম করতে, আপনাকে আপনার গুগল জেমিনি এপিআই কী যোগ করতে হবে।",
+    configErrorBody2: "`services/geminiService.ts` ফাইলটি খুলুন এবং `GEMINI_API_KEY` ধ্রুবকটিতে আপনার কী পেস্ট করুন।",
+    configErrorSecurity: "নিরাপত্তার জন্য, কী সহ এই ফাইলটি একটি পাবলিক রিপোজিটরিতে প্রতিশ্রুতিবদ্ধ করা এড়িয়ে চলুন।"
   },
   ta: {
     appTitle: "AI நிதி டாஷ்போர்டு",
@@ -388,10 +385,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "தொகை",
     actions: "செயல்கள்",
     configErrorTitle: "உள்ளமைவு பிழை",
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
-    configErrorBody1: "ஜெமினி ஏபிஐ விசை இல்லை. AI அம்சங்களை இயக்க, தயவுசெய்து",
-    configErrorBody2: "சுற்றுச்சூழல் மாறியை அமைக்கவும்.",
-    configErrorSecurity: "இந்த பயன்பாட்டில் எளிமைக்காக, ஏபிஐ விசை நேரடியாக குறியீட்டில் அமைக்கப்பட்டுள்ளது. ஒரு உற்பத்தி சூழலில், சூழல் மாறிகள் அல்லது ரகசிய மேலாளர் போன்ற மிகவும் பாதுகாப்பான முறையைப் பயன்படுத்த கடுமையாக பரிந்துரைக்கப்படுகிறது."
+    configErrorBody1: "AI அம்சங்கள் கிடைக்கவில்லை. அவற்றை இயக்க, உங்கள் Google Gemini API விசையைச் சேர்க்க வேண்டும்.",
+    configErrorBody2: "`services/geminiService.ts` கோப்பைத் திறந்து, உங்கள் விசையை `GEMINI_API_KEY` மாறிலியில் ஒட்டவும்.",
+    configErrorSecurity: "பாதுகாப்பிற்காக, இந்த கோப்பை விசைடன் ஒரு பொது களஞ்சியத்தில் சேர்ப்பதைத் தவிர்க்கவும்."
   },
   pa: {
     appTitle: "ਏਆਈ ਵਿੱਤੀ ਡੈਸ਼ਬੋਰਡ",
@@ -484,10 +480,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "ਰਕਮ",
     actions: "ਕਾਰਵਾਈਆਂ",
     configErrorTitle: "ਸੰਰਚਨਾ ਗਲਤੀ",
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
-    configErrorBody1: "ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਗੁੰਮ ਹੈ। ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ",
-    configErrorBody2: "ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਸੈੱਟ ਕਰੋ।",
-    configErrorSecurity: "ਇਸ ਐਪਲੀਕੇਸ਼ਨ ਵਿੱਚ ਸਰਲਤਾ ਲਈ, ਏਪੀਆਈ ਕੁੰਜੀ ਸਿੱਧੇ ਕੋਡ ਵਿੱਚ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ। ਇੱਕ ਉਤਪਾਦਨ ਵਾਤਾਵਰਣ ਵਿੱਚ, ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਜਾਂ ਇੱਕ ਗੁਪਤ ਪ੍ਰਬੰਧਕ ਵਰਗੇ ਵਧੇਰੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਦੀ ਵਰਤੋਂ ਕਰਨ ਦੀ ਜ਼ੋਰਦਾਰ ਸਿਫਾਰਸ਼ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।"
+    configErrorBody1: "ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਉਪਲਬਧ ਨਹੀਂ ਹਨ। ਉਹਨਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਤੁਹਾਨੂੰ ਆਪਣੀ ਗੂਗਲ ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਸ਼ਾਮਲ ਕਰਨ ਦੀ ਲੋੜ ਹੈ।",
+    configErrorBody2: "`services/geminiService.ts` ਫਾਈਲ ਖੋਲ੍ਹੋ ਅਤੇ ਆਪਣੀ ਕੁੰਜੀ ਨੂੰ `GEMINI_API_KEY` ਸਥਿਰ ਵਿੱਚ ਪੇਸਟ ਕਰੋ।",
+    configErrorSecurity: "ਸੁਰੱਖਿਆ ਲਈ, ਇਸ ਫਾਈਲ ਨੂੰ ਕੁੰਜੀ ਨਾਲ ਜਨਤਕ ਰਿਪੋਜ਼ਟਰੀ ਵਿੱਚ ਜਮ੍ਹਾਂ ਕਰਨ ਤੋਂ ਬਚੋ।"
   },
   te: {
     appTitle: "AI ఆర్థిక డాష్‌బోర్డ్",
@@ -580,10 +575,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "మొత్తం",
     actions: "చర్యలు",
     configErrorTitle: "ఆకృతీకరణ లోపం",
-    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
-    configErrorBody1: "జెమిని API కీ లేదు. AI లక్షణాలను ప్రారంభించడానికి, దయచేసి",
-    configErrorBody2: "పర్యావరణ వేరియబుల్‌ను సెట్ చేయండి.",
-    configErrorSecurity: "ఈ అనువర్తనంలో సరళత కోసం, API కీ నేరుగా కోడ్‌లో సెట్ చేయబడింది. ఉత్పత్తి వాతావరణంలో, పర్యావరణ వేరియబుల్స్ లేదా రహస్య నిర్వాహకి వంటి మరింత సురక్షితమైన పద్ధతిని ఉపయోగించడం గట్టిగా సిఫార్సు చేయబడింది."
+    configErrorBody1: "AI ఫీచర్లు అందుబాటులో లేవు. వాటిని ప్రారంభించడానికి, మీరు మీ Google జెమిని API కీని జోడించాలి.",
+    configErrorBody2: "`services/geminiService.ts` ఫైల్‌ను తెరిచి, మీ కీని `GEMINI_API_KEY` స్థిరాంకంలో అతికించండి.",
+    configErrorSecurity: "భద్రత కోసం, ఈ ఫైల్‌ను కీతో పబ్లిక్ రిపోజిటరీకి కట్టుబడి ఉండకుండా ఉండండి."
   },
 };
 

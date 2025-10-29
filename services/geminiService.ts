@@ -4,23 +4,17 @@ import { FinancialSummary, Transaction, SpendingAnomaly, CreditAdvice, Financial
 
 // --- Client Initialization ---
 
-// FIX: Updated to use process.env.API_KEY as per guidelines.
-const apiKey = process.env.API_KEY;
+// IMPORTANT: PASTE YOUR GEMINI API KEY HERE
+// Obtain your key from Google AI Studio: https://aistudio.google.com/app/apikey
+const GEMINI_API_KEY = "AIzaSyBEIMriDqaCOmRXQsmELX8shtrrovWNVFo";
 
-if (!apiKey) {
-  console.error("Missing Gemini API key. Please set API_KEY in environment variables.");
-}
 
-// FIX: Updated to use process.env.API_KEY.
 /**
- * Checks if the Gemini API is available by checking for the API key in environment variables.
- * @returns {boolean} True if the API key is available and not a placeholder.
+ * Checks if the Gemini API is available by checking for the API key.
+ * @returns {boolean} True if the API key is set and not the placeholder.
  */
 export const isGeminiAvailable = (): boolean => {
-    // This check ensures AI features are disabled via the ApiKeyChecker component if the key is not set.
-    return !!apiKey && 
-           apiKey !== "YOUR_API_KEY_HERE" && 
-           apiKey !== "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    return GEMINI_API_KEY !== "AIzaSyBEIMriDqaCOmRXQsmELX8shtrrovWNVF";
 };
 
 
@@ -38,14 +32,12 @@ function getAiClient(): GoogleGenAI {
     }
     
     if (!isGeminiAvailable()) {
-        // This provides a clear error for the user if they forget to add the key,
-        // in case ApiKeyChecker is not used.
-        // FIX: Update error message to refer to API_KEY.
-        throw new Error("Gemini API key is not configured. Please set the API_KEY environment variable.");
+        // This error will be caught by functions using this client.
+        // The ApiKeyChecker component should prevent this from being called in the UI.
+        throw new Error("Gemini API key is not configured. Please paste your key in services/geminiService.ts.");
     }
     
-    // FIX: The isGeminiAvailable check ensures apiKey is a valid string here.
-    ai = new GoogleGenAI({ apiKey: apiKey! });
+    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
     return ai;
 }
 
@@ -299,14 +291,22 @@ export const getFinancialTips = async (summary: FinancialSummary): Promise<Finan
 
 export const predictNextMonthExpenses = async (transactions: Transaction[], monthsToPredict: number): Promise<Prediction[]> => {
     const client = getAiClient();
-    const recentExpenses = transactions.filter(t => t.type === 'expense').slice(-100).map(t => ({ date: new Date(t.date).toISOString().split('T')[0], amount: t.amount, category: t.category }));
+    const transactionData = transactions.slice(-100).map(t => ({
+        date: t.date.toISOString().split('T')[0],
+        amount: t.amount,
+        category: t.category,
+        type: t.type
+    }));
 
     const prompt = `
-        You are a financial forecasting AI. Based on the user's recent transaction history, predict their total expenses and top 3-5 spending categories for the next ${monthsToPredict} month(s).
-        Analyze patterns and recurring costs.
-        Recent Expense Data (last 100 transactions): ${JSON.stringify(recentExpenses)}
-        Current Date: ${new Date().toISOString().split('T')[0]}
-        Provide your prediction as a JSON array. Each object should represent a future month with "month", "totalPredictedExpenses", and "categoryPredictions".
+        Based on the following recent transaction history, predict the total expenses and top 3 expense categories for the next ${monthsToPredict} month(s).
+        Analyze spending patterns, seasonality, and recurring expenses.
+        Transaction History: ${JSON.stringify(transactionData)}
+        
+        Return the response as an array of JSON objects, one for each predicted month. Each object should have:
+        1. 'month': A string in "YYYY-MM" format (e.g., "2024-09").
+        2. 'totalPredictedExpenses': A number representing the total predicted expenses for that month.
+        3. 'categoryPredictions': An array of objects, each with 'category' (string) and 'predictedAmount' (number).
     `;
 
     const response = await client.models.generateContent({
@@ -325,7 +325,10 @@ export const predictNextMonthExpenses = async (transactions: Transaction[], mont
                             type: Type.ARRAY,
                             items: {
                                 type: Type.OBJECT,
-                                properties: { category: { type: Type.STRING }, predictedAmount: { type: Type.NUMBER } },
+                                properties: {
+                                    category: { type: Type.STRING },
+                                    predictedAmount: { type: Type.NUMBER }
+                                },
                                 required: ["category", "predictedAmount"]
                             }
                         }
@@ -335,24 +338,33 @@ export const predictNextMonthExpenses = async (transactions: Transaction[], mont
             }
         }
     });
+
     return extractJsonFromMarkdown(response.text) as Prediction[];
 };
 
-export const simulateScenario = async (summary: FinancialSummary, incomeChange: number, expenseChanges: { category: string, amount: number }[]): Promise<ScenarioResult> => {
+
+export const simulateScenario = async (
+    summary: FinancialSummary,
+    incomeChange: number,
+    expenseChanges: { category: string, amount: number }[]
+): Promise<ScenarioResult> => {
     const client = getAiClient();
     const prompt = `
-        You are a financial scenario simulator. A user wants to understand the impact of potential changes.
-        Current Monthly Summary:
-        - Income: $${summary.totalIncome.toFixed(2)}
-        - Expenses: $${summary.totalExpenses.toFixed(2)}
+        Act as a financial analyst. A user wants to simulate a financial scenario.
+        Current Financial Summary:
+        - Total Income: $${summary.totalIncome.toFixed(2)}
+        - Total Expenses: $${summary.totalExpenses.toFixed(2)}
+        - Net Savings: $${summary.netSavings.toFixed(2)}
+
         Proposed Changes:
-        - Income Change: $${incomeChange.toFixed(2)}
-        - Expense Changes: ${expenseChanges.length > 0 ? expenseChanges.map(c => `${c.category}: $${c.amount.toFixed(2)}`).join(', ') : 'None'}
-        Calculate the new estimated monthly savings. Provide a brief 'impactAnalysis' and 'recommendations'.
-        Return a single JSON object with "newMonthlySavings", "impactAnalysis", and "recommendations".
+        - Monthly Income Change: $${incomeChange.toFixed(2)}
+        - Monthly Expense Changes: ${JSON.stringify(expenseChanges)}
+
+        Based on these changes, calculate the new financial situation and provide an analysis. Return a JSON object with:
+        1. 'newMonthlySavings': The new calculated monthly savings (number).
+        2. 'impactAnalysis': A brief paragraph (2-4 sentences) explaining the financial impact of these changes.
+        3. 'recommendations': A short, actionable recommendation (string, can include newlines for formatting) based on the outcome.
     `;
-    
-    const newMonthlySavings = (summary.totalIncome + incomeChange) - (summary.totalExpenses + expenseChanges.reduce((sum, change) => sum + change.amount, 0));
 
     const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -370,7 +382,6 @@ export const simulateScenario = async (summary: FinancialSummary, incomeChange: 
             }
         }
     });
-    const result = extractJsonFromMarkdown(response.text) as ScenarioResult;
-    result.newMonthlySavings = newMonthlySavings; // Override with precise calculation
-    return result;
+
+    return extractJsonFromMarkdown(response.text) as ScenarioResult;
 };

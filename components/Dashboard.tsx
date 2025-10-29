@@ -17,6 +17,7 @@ import SpendingTrends from './SpendingTrends';
 import CreditScoreMonitor from './CreditScoreMonitor';
 import DashboardFilters from './DashboardFilters';
 import { useLanguage } from '../contexts/LanguageContext';
+import FinancialInsights from './FinancialInsights';
 
 
 interface DashboardProps {
@@ -206,6 +207,14 @@ const Dashboard: React.FC<DashboardProps> = (props) => {
       </div>
 
       <FinancialHealthReport summary={summary} transactions={allTransactions} />
+
+      <div className={`${baseCardClasses}`}>
+        <FinancialInsights 
+          summary={summary} 
+          transactions={allTransactions} 
+          categories={categories} 
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className={`${baseCardClasses} flex flex-col`}>
