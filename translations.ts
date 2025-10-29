@@ -196,8 +196,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "राशि",
     actions: "कार्रवाइयां",
     configErrorTitle: "कॉन्फ़िगरेशन त्रुटि",
-    configErrorBody1: "जेमिनी एपीआई कुंजी गायब है। एआई सुविधाओं को सक्षम करने के लिए, कृपया फ़ाइल खोलें",
-    configErrorBody2: "और प्लेसहोल्डर कुंजी को अपनी वास्तविक जेमिनी एपीआई कुंजी से बदलें।",
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
+    configErrorBody1: "जेमिनी एपीआई कुंजी गायब है। एआई सुविधाओं को सक्षम करने के लिए, कृपया",
+    configErrorBody2: "पर्यावरण चर सेट करें।",
     configErrorSecurity: "इस एप्लिकेशन में सरलता के लिए, एपीआई कुंजी सीधे कोड में सेट की गई है। उत्पादन वातावरण में, पर्यावरण चर या रहस्य प्रबंधक जैसी अधिक सुरक्षित विधि का उपयोग करने की दृढ़ता से अनुशंसा की जाती है।"
   },
   bn: {
@@ -291,8 +292,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "পরিমাণ",
     actions: "ক্রিয়া",
     configErrorTitle: "কনফিগারেশন ত্রুটি",
-    configErrorBody1: "জেমিনি এপিআই কী অনুপস্থিত। এআই বৈশিষ্ট্যগুলি সক্ষম করতে, অনুগ্রহ করে ফাইলটি খুলুন",
-    configErrorBody2: "এবং প্লেসহোল্ডার কীটি আপনার আসল জেমিনি এপিআই কী দিয়ে প্রতিস্থাপন করুন।",
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
+    configErrorBody1: "জেমিনি এপিআই কী অনুপস্থিত। এআই বৈশিষ্ট্যগুলি সক্ষম করতে, অনুগ্রহ করে",
+    configErrorBody2: "এনভায়রনমেন্ট ভেরিয়েবল সেট করুন।",
     configErrorSecurity: "এই অ্যাপ্লিকেশনটিতে সরলতার জন্য, এপিআই কী সরাসরি কোডে সেট করা হয়েছে। একটি প্রোডাকশন পরিবেশে, পরিবেশ ভেরিয়েবল বা একটি সিক্রেটস ম্যানেজারের মতো আরও সুরক্ষিত পদ্ধতি ব্যবহার করার জন্য দৃঢ়ভাবে সুপারিশ করা হয়।"
   },
   ta: {
@@ -386,8 +388,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "தொகை",
     actions: "செயல்கள்",
     configErrorTitle: "உள்ளமைவு பிழை",
-    configErrorBody1: "ஜெமினி ஏபிஐ விசை இல்லை. AI அம்சங்களை இயக்க, கோப்பைத் திறக்கவும்",
-    configErrorBody2: "மற்றும் ஒதுக்கிட விசையை உங்கள் உண்மையான ஜெமினி ஏபிஐ விசையுடன் மாற்றவும்.",
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
+    configErrorBody1: "ஜெமினி ஏபிஐ விசை இல்லை. AI அம்சங்களை இயக்க, தயவுசெய்து",
+    configErrorBody2: "சுற்றுச்சூழல் மாறியை அமைக்கவும்.",
     configErrorSecurity: "இந்த பயன்பாட்டில் எளிமைக்காக, ஏபிஐ விசை நேரடியாக குறியீட்டில் அமைக்கப்பட்டுள்ளது. ஒரு உற்பத்தி சூழலில், சூழல் மாறிகள் அல்லது ரகசிய மேலாளர் போன்ற மிகவும் பாதுகாப்பான முறையைப் பயன்படுத்த கடுமையாக பரிந்துரைக்கப்படுகிறது."
   },
   pa: {
@@ -481,8 +484,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "ਰਕਮ",
     actions: "ਕਾਰਵਾਈਆਂ",
     configErrorTitle: "ਸੰਰਚਨਾ ਗਲਤੀ",
-    configErrorBody1: "ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਗੁੰਮ ਹੈ। ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਫਾਈਲ ਖੋਲ੍ਹੋ",
-    configErrorBody2: "ਅਤੇ ਪਲੇਸਹੋਲਡਰ ਕੁੰਜੀ ਨੂੰ ਆਪਣੀ ਅਸਲ ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਨਾਲ ਬਦਲੋ।",
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
+    configErrorBody1: "ਜੈਮਿਨੀ ਏਪੀਆਈ ਕੁੰਜੀ ਗੁੰਮ ਹੈ। ਏਆਈ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਨੂੰ ਸਮਰੱਥ ਕਰਨ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ",
+    configErrorBody2: "ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਸੈੱਟ ਕਰੋ।",
     configErrorSecurity: "ਇਸ ਐਪਲੀਕੇਸ਼ਨ ਵਿੱਚ ਸਰਲਤਾ ਲਈ, ਏਪੀਆਈ ਕੁੰਜੀ ਸਿੱਧੇ ਕੋਡ ਵਿੱਚ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ। ਇੱਕ ਉਤਪਾਦਨ ਵਾਤਾਵਰਣ ਵਿੱਚ, ਵਾਤਾਵਰਣ ਵੇਰੀਏਬਲ ਜਾਂ ਇੱਕ ਗੁਪਤ ਪ੍ਰਬੰਧਕ ਵਰਗੇ ਵਧੇਰੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਦੀ ਵਰਤੋਂ ਕਰਨ ਦੀ ਜ਼ੋਰਦਾਰ ਸਿਫਾਰਸ਼ ਕੀਤੀ ਜਾਂਦੀ ਹੈ।"
   },
   te: {
@@ -576,8 +580,9 @@ export const translations: Record<string, Record<string, string>> = {
     amount: "మొత్తం",
     actions: "చర్యలు",
     configErrorTitle: "ఆకృతీకరణ లోపం",
-    configErrorBody1: "జెమిని API కీ లేదు. AI లక్షణాలను ప్రారంభించడానికి, దయచేసి ఫైల్‌ను తెరవండి",
-    configErrorBody2: "మరియు ప్లేస్‌హోల్డర్ కీని మీ వాస్తవ జెమిని API కీతో భర్తీ చేయండి.",
+    // FIX: Updated error messages to refer to environment variables instead of hardcoded keys.
+    configErrorBody1: "జెమిని API కీ లేదు. AI లక్షణాలను ప్రారంభించడానికి, దయచేసి",
+    configErrorBody2: "పర్యావరణ వేరియబుల్‌ను సెట్ చేయండి.",
     configErrorSecurity: "ఈ అనువర్తనంలో సరళత కోసం, API కీ నేరుగా కోడ్‌లో సెట్ చేయబడింది. ఉత్పత్తి వాతావరణంలో, పర్యావరణ వేరియబుల్స్ లేదా రహస్య నిర్వాహకి వంటి మరింత సురక్షితమైన పద్ధతిని ఉపయోగించడం గట్టిగా సిఫార్సు చేయబడింది."
   },
 };

@@ -27,7 +27,8 @@ const DashboardFilters: React.FC<DashboardFiltersProps> = (props) => {
   const { t, language } = useLanguage();
 
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(e.target.selectedOptions, option => option.value);
+    // FIX: Add explicit type to `option` to resolve TypeScript error.
+    const values = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
     onCategoryChange(values);
   };
   
